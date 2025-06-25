@@ -193,10 +193,10 @@ function checkRateLimit(ctx: MyContext): boolean {
   await bot.telegram.deleteWebhook();
   await bot.launch({
     dropPendingUpdates: true,
-    webhook: {
-      path: WEBHOOK_PATH,
-      domain: BASE_URL,
-    },
+    // webhook: {
+    //   path: WEBHOOK_PATH,
+    //   domain: BASE_URL,
+    // },
   });
 })();
 

@@ -1,0 +1,77 @@
+{
+    "type": "present-proof/presentation-result",
+    "verification_result": "ProofValidated",
+    "requested_presentation": {
+      "unrevealed_attrs": {},
+      "predicates": {},
+      "identifiers": [
+        {
+          "schema_id": "https://dev-schema.ngotag.com/schemas/c7952a0a-e9b5-4a4b-a714-1e5d0a1ae076",
+          "cred_def_id": null
+        },
+        {
+          "schema_id": "https://dev-schema.ngotag.com/schemas/c7952a0a-e9b5-4a4b-a714-1e5d0a1ae076",
+          "cred_def_id": null
+        },
+        {
+          "schema_id": "https://dev-schema.ngotag.com/schemas/c7952a0a-e9b5-4a4b-a714-1e5d0a1ae076",
+          "cred_def_id": null
+        },
+        {
+          "schema_id": "https://dev-schema.ngotag.com/schemas/e3b606d0-e477-4fc2-b5ab-0adc4bd75c54",
+          "cred_def_id": null
+        },
+        {
+          "schema_id": "https://dev-schema.ngotag.com/schemas/e3b606d0-e477-4fc2-b5ab-0adc4bd75c54",
+          "cred_def_id": null
+        },
+        {
+          "schema_id": "https://dev-schema.ngotag.com/schemas/e3b606d0-e477-4fc2-b5ab-0adc4bd75c54",
+          "cred_def_id": null
+        }
+      ],
+      "self_attested_attrs": {},
+      "revealed_attrs": {
+        "Gender": [
+          {
+            "value": "Male",
+            "identifier_index": 0
+          }
+        ],
+        "Date of Birth": [
+          {
+            "value": "19/07/1995",
+            "identifier_index": 0
+          }
+        ],
+        "Citizenship": [
+          {
+            "value": "Bhutanese",
+            "identifier_index": 0
+          }
+        ],
+        "Village": [
+          {
+            "value": "Namthi",
+            "identifier_index": 3
+          }
+        ],
+        "Gewog": [
+          {
+            "value": "Tangsibjee",
+            "identifier_index": 3
+          }
+        ],
+        "Dzongkhag": [
+          {
+            "value": "Trongsa",
+            "identifier_index": 3
+          }
+        ]
+      }
+    },
+    "relationship_did": "dd73b268-53e5-4240-a491-4c69b86f1025",
+    "thid": "08cfcca4-b01a-48be-85d2-042c48f25402",
+    "holder_did": "did:key:z6MkgvuGhwTJsUFRw9hAxJNgeVoax7qbawpVvsCqVFoGaBYA"
+  }
+  

@@ -6,7 +6,7 @@ dotenv.config();
 const NDI_CLIENT_ID = process.env.NDI_CLIENT_ID!;
 const NDI_CLIENT_SECRET = process.env.NDI_CLIENT_SECRET!;
 const WEBHOOK_URL = process.env.WEBHOOK_URL!;
-const WEBHOOK_ID = "tg-webhook-4";
+const WEBHOOK_ID = process.env.WEBHOOK_ID!;
 
 const NDI_AUTH_URL =
   "https://staging.bhutanndi.com/authentication/v1/authenticate";

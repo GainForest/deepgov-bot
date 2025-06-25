@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import { db } from "./db/client";
 import { proofs } from "./db/schema";
 import { threadMap } from "./ndi";
+import { upsertProof } from "./db/api";
 
 dotenv.config();
 
@@ -14,7 +15,7 @@ export async function handleWebhook(req: Request, res: Response) {
   const threadId = body.thid || body.threadId;
 
   console.log(JSON.stringify(body, null, 2));
-  
+
   if (
     body.type === "present-proof/presentation-result" &&
     body.verification_result === "ProofValidated" &&
@@ -40,13 +41,7 @@ export async function handleWebhook(req: Request, res: Response) {
     console.log(updates, { userId, chatId });
 
     try {
-      await db
-        .insert(proofs)
-        .values({ userId: String(userId), did, ...updates })
-        .onConflictDoUpdate({
-          target: proofs.userId,
-          set: { ...updates, did, updatedAt: new Date() },
-        });
+      await upsertProof(String(userId), did, updates);
       console.log(`Stored proof for ${did} to DB`);
     } catch (e) {
       console.error("Failed to store proof:", e);

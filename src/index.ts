@@ -4,7 +4,6 @@ import express from "express";
 import dotenv from "dotenv";
 import { ensureWebhook, createProofRequest } from "./ndi";
 import { handleWebhook } from "./webhook";
-import { messages, splitMessage } from "./user-state";
 import { message } from "telegraf/filters";
 import { handleMessage } from "./openai";
 
@@ -42,23 +41,24 @@ bot.use(async (ctx, next) => {
 });
 
 bot.start(async (ctx: MyContext) => {
-  await ctx.reply(messages.languageSelect, {
-    reply_markup: {
-      inline_keyboard: [
-        [
-          { text: "English 🇬🇧", callback_data: "lang_en" },
-          { text: "Dzongkha 🇧🇹", callback_data: "lang_bt" },
-        ],
-      ],
-    },
-  });
+  // await ctx.reply(messages.languageSelect, {
+  //   reply_markup: {
+  //     inline_keyboard: [
+  //       [
+  //         { text: "English 🇬🇧", callback_data: "lang_en" },
+  //         { text: "Dzongkha 🇧🇹", callback_data: "lang_bt" },
+  //       ],
+  //     ],
+  //   },
+  // });
 });
 
 bot.command("help", async (ctx: MyContext) => {
   if (!checkRateLimit(ctx)) return;
 
   const lang = ctx.session.language;
-  await ctx.reply(messages.help[lang]);
+  await ctx.reply("---");
+  // await ctx.reply(messages.help[lang]);
 });
 
 bot.command("auth", async (ctx: MyContext) => {

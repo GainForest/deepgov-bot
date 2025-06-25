@@ -1,8 +1,6 @@
 import type { Request, Response } from "express";
 import axios from "axios";
 import dotenv from "dotenv";
-import { db } from "./db/client";
-import { proofs } from "./db/schema";
 import { threadMap } from "./ndi";
 import { upsertProof } from "./db/api";
 
@@ -50,8 +48,8 @@ export async function handleWebhook(req: Request, res: Response) {
     if (chatId) {
       const verified = body.verification_result === "ProofValidated";
       const text = verified
-        ? " Successfully authenticated!"
-        : "L Authentication failed or was rejected.";
+        ? "✅ Successfully authenticated!"
+        : "❌ Authentication failed or was rejected.";
 
       await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
         chat_id: chatId,

@@ -4,7 +4,7 @@ import { fetchModelSpecs } from "./github";
 
 dotenv.config();
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+export const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const chatStates = new Map();
 
@@ -34,6 +34,8 @@ ${agent.constitution}
 
     // Store the response ID for future context
     chatStates.set(chatId, response.id);
+
+    console.log(response.id);
 
     return response.output_text;
   } catch (error) {

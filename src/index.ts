@@ -41,24 +41,7 @@ bot.use(async (ctx, next) => {
 });
 
 bot.start(async (ctx: MyContext) => {
-  // await ctx.reply(messages.languageSelect, {
-  //   reply_markup: {
-  //     inline_keyboard: [
-  //       [
-  //         { text: "English 🇬🇧", callback_data: "lang_en" },
-  //         { text: "Dzongkha 🇧🇹", callback_data: "lang_bt" },
-  //       ],
-  //     ],
-  //   },
-  // });
-});
-
-bot.command("help", async (ctx: MyContext) => {
-  if (!checkRateLimit(ctx)) return;
-
-  const lang = ctx.session.language;
-  await ctx.reply("---");
-  // await ctx.reply(messages.help[lang]);
+  await ctx.reply("Welcome");
 });
 
 bot.command("auth", async (ctx: MyContext) => {
@@ -68,6 +51,7 @@ bot.command("auth", async (ctx: MyContext) => {
     const chatId = ctx.chat!.id;
     const userId = ctx.from!.id;
 
+    await ctx.reply("Creating authentication request...");
     await ensureWebhook();
     const link = await createProofRequest(chatId, userId);
 
@@ -86,24 +70,6 @@ bot.command("auth", async (ctx: MyContext) => {
   } catch (error) {
     console.error("Auth command error:", error);
     await ctx.reply("Authentication setup failed. Please try again.");
-  }
-});
-
-bot.on("callback_query", async (ctx: MyContext) => {
-  if (!ctx.callbackQuery?.data) return;
-
-  const data = ctx.callbackQuery?.data;
-
-  if (data === "lang_en") {
-    ctx.session.language = "EN";
-    await ctx.answerCbQuery();
-    await ctx.editMessageText("Language set to English ✅");
-    await ctx.reply(messages.welcome.EN);
-  } else if (data === "lang_bt") {
-    ctx.session.language = "BT";
-    await ctx.answerCbQuery();
-    await ctx.editMessageText("སྐད་ཡིག་རྫོང་ཁར་བཞག་ཡོད། ✅");
-    await ctx.reply(messages.welcome.BT);
   }
 });
 

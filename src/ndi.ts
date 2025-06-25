@@ -5,7 +5,7 @@ dotenv.config();
 
 const NDI_CLIENT_ID = process.env.NDI_CLIENT_ID!;
 const NDI_CLIENT_SECRET = process.env.NDI_CLIENT_SECRET!;
-const WEBHOOK_URL = process.env.WEBHOOK_URL!;
+const BASE_URL = process.env.BASE_URL!;
 const WEBHOOK_ID = process.env.WEBHOOK_ID!;
 
 const NDI_AUTH_URL =
@@ -68,7 +68,7 @@ export async function ensureWebhook() {
     const token = await getNdiAccessToken();
     await makeNdiRequest("post", `${NDI_WEBHOOK_URL}/register`, {
       webhookId: WEBHOOK_ID,
-      webhookURL: WEBHOOK_URL,
+      webhookURL: BASE_URL + "/webhook",
       authentication: { type: "OAuth2", version: "v2", data: { token } },
     });
     console.log("Webhook registered");

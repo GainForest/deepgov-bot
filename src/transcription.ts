@@ -43,8 +43,9 @@ export async function transcribeAudio(audioUrl: string): Promise<string> {
   if ("id" in data) {
     const jobId = data.id;
     const statusUrl = `https://api.runpod.ai/v2/faster-whisper/status/${jobId}`;
-    const statusResponse = await axios.get(statusUrl, { headers });
-    return statusResponse.data.output.transcription;
+    return axios
+      .get(statusUrl, { headers })
+      .then((r) => r.data.output.transcription);
   }
 
   // Direct response

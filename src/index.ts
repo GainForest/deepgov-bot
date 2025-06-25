@@ -114,11 +114,8 @@ bot.on(message("voice"), async (ctx: MyContext) => {
     await ctx.reply("🎵 Processing your voice message...");
 
     const fileId = ctx.message.voice.file_id;
-    console.log("voice", fileId);
     const file = await ctx.telegram.getFile(fileId);
     const fileUrl = `https://api.telegram.org/file/bot${process.env.BOT_TOKEN}/${file.file_path}`;
-
-    console.log(fileUrl);
 
     // Transcribe the audio
     const transcription = await transcribeAudio(fileUrl);

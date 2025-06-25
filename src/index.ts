@@ -6,6 +6,7 @@ import { ensureWebhook, createProofRequest } from "./ndi";
 import { handleWebhook } from "./webhook";
 import { message } from "telegraf/filters";
 import { handleMessage } from "./openai";
+import { transcribeAudio } from "./transcription";
 
 dotenv.config();
 
@@ -23,6 +24,14 @@ interface SessionData {
 interface MyContext extends Context {
   session: SessionData;
 }
+
+// Rate limit messages
+const messages = {
+  rateLimited: {
+    EN: "Rate limit exceeded. Please try again later.",
+    BT: "Rate limit exceeded. Please try again later.",
+  },
+};
 
 const bot = new Telegraf<MyContext>(BOT_TOKEN);
 
@@ -75,11 +84,60 @@ bot.command("auth", async (ctx: MyContext) => {
 
 bot.on(message("text"), async (ctx: MyContext) => {
   if (!checkRateLimit(ctx)) return;
+
+  if (!ctx.chat || !ctx.from || !ctx.message || !("text" in ctx.message)) {
+    await ctx.reply("Invalid message format.");
+    return;
+  }
+
   const chatId = ctx.chat.id;
+  const userId = ctx.from.id;
   const userInput = ctx.message.text;
 
-  const reply = await handleMessage(chatId, userInput);
+  const reply = await handleMessage(chatId, userId, userInput);
   await ctx.reply(reply);
+});
+
+bot.on(message("voice"), async (ctx: MyContext) => {
+  if (!checkRateLimit(ctx)) return;
+
+  if (!ctx.chat || !ctx.from || !ctx.message || !("voice" in ctx.message)) {
+    await ctx.reply("Invalid voice message format.");
+    return;
+  }
+
+  const chatId = ctx.chat.id;
+  const userId = ctx.from.id;
+  console.log("voice", chatId);
+
+  try {
+    await ctx.reply("🎵 Processing your voice message...");
+
+    const fileId = ctx.message.voice.file_id;
+    console.log("voice", fileId);
+    const file = await ctx.telegram.getFile(fileId);
+    const fileUrl = `https://api.telegram.org/file/bot${process.env.BOT_TOKEN}/${file.file_path}`;
+
+    console.log(fileUrl);
+
+    // Transcribe the audio
+    const transcription = await transcribeAudio(fileUrl);
+
+    if (transcription && transcription.trim()) {
+      await ctx.reply(`🎤 Transcription: "${transcription}"`);
+
+      // Process the transcribed text through the normal message handler
+      const reply = await handleMessage(chatId, userId, transcription);
+      await ctx.reply(reply);
+    } else {
+      await ctx.reply(
+        "Could not transcribe the audio. Please try again or send a text message."
+      );
+    }
+  } catch (error) {
+    console.error("Audio message error:", error);
+    await ctx.reply("Failed to process audio message. Please try again.");
+  }
 });
 
 bot.launch();

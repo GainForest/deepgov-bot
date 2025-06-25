@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import dotenv from "dotenv";
 import { fetchModelSpecs } from "./github";
+import { insertResponse } from "./db/api";
 
 dotenv.config();
 
@@ -8,7 +9,11 @@ export const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const chatStates = new Map();
 
-export async function handleMessage(chatId: number, content: string) {
+export async function handleMessage(
+  chatId: number,
+  userId: number,
+  content: string
+) {
   try {
     const agents = await fetchModelSpecs();
     const agent = agents[0];
@@ -31,6 +36,8 @@ ${agent.constitution}
       previous_response_id: previousId,
       store: true,
     });
+
+    insertResponse(String(userId), String(chatId), response.id).then();
 
     // Store the response ID for future context
     chatStates.set(chatId, response.id);

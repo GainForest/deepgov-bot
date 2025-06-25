@@ -21,6 +21,7 @@
     "axios": "^1.10.0",
     "drizzle-orm": "^0.44.2",
     "express": "^5.1.0",
+    "openai": "^5.7.0",
     "telegraf": "^4.16.3"
   }
 }

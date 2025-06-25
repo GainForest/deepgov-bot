@@ -137,8 +137,6 @@ bot.on(message("voice"), async (ctx: MyContext) => {
   }
 });
 
-bot.launch();
-
 const app = express();
 app.use(express.json());
 
@@ -167,3 +165,8 @@ function checkRateLimit(ctx: MyContext): boolean {
   ctx.session.requestTimestamps.push(now);
   return true;
 }
+
+(async () => {
+  await bot.telegram.deleteWebhook();
+  await bot.launch();
+})();

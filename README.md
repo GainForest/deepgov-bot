@@ -1,4 +1,4 @@
-# telegram
+# DeepGov Bhutan Telegram
 
 To install dependencies:
 
@@ -9,7 +9,9 @@ bun install
 To run:
 
 ```bash
-bun run index.ts
+bun run start
 ```
 
-This project was created using `bun init` in bun v1.2.16. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+```bash
+bun run dev
+```

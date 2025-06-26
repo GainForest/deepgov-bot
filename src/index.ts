@@ -107,13 +107,6 @@ bot.command("profile", async (ctx: MyContext) => {
   }
 });
 
-async function checkAuth(ctx: MyContext) {
-  const profile = await findProfile(String(ctx.from.id));
-  if (!profile) {
-    await ctx.reply("Please authenticate first with /auth.");
-    return;
-  }
-}
 bot.on(message("text"), async (ctx: MyContext) => {
   if (!checkRateLimit(ctx)) return;
 
@@ -121,8 +114,6 @@ bot.on(message("text"), async (ctx: MyContext) => {
     await ctx.reply("Invalid message format.");
     return;
   }
-
-  await checkAuth(ctx);
 
   const chatId = ctx.chat.id;
   const userId = ctx.from.id;

@@ -6,7 +6,7 @@ import { ensureWebhook, createProofRequest } from "./ndi";
 import { handleWebhook } from "./webhook";
 import { handleMessage } from "./openai";
 import { transcribeAudio } from "./transcription";
-import { findProfile } from "./db/api";
+import { findProfile, findResponses } from "./db/api";
 
 dotenv.config();
 
@@ -80,6 +80,25 @@ Your vision matters deeply.
 });
 
 bot.command("auth", handleAuth);
+
+bot.command("claim", async (ctx: MyContext) => {
+  if (!checkRateLimit(ctx)) return;
+
+  const responses = await findResponses(ctx.from!.id);
+  console.log(responses);
+
+  const requiredInteractions = 30;
+  if (responses.length < requiredInteractions) {
+    return ctx.reply(
+      `${responses.length}/${requiredInteractions} interactions found. Please interact more with Takin AI before claiming.`
+    );
+  }
+  await ctx.reply(`${responses.length} interactions with Takin AI!`);
+
+  await ctx.reply("Claiming credential...");
+  await issueCredential(ctx.from!.id);
+  return ctx.reply("Claimed credential! Check your Bhutan NDI Wallet.");
+});
 
 bot.command("profile", async (ctx: MyContext) => {
   if (!checkRateLimit(ctx)) return;

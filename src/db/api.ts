@@ -27,3 +27,7 @@ export async function findProfile(userId: string) {
     .where(eq(proofs.userId, userId))
     .then((r) => r?.[0] ?? null);
 }
+
+export async function findResponses(userId: string) {
+  return db.select().from(responses).where(eq(responses.userId, userId));
+}

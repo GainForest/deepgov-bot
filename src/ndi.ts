@@ -8,15 +8,18 @@ const NDI_CLIENT_SECRET = process.env.NDI_CLIENT_SECRET!;
 const BASE_URL = process.env.BASE_URL!;
 const WEBHOOK_ID = process.env.WEBHOOK_ID!;
 
+const NDI_BASE_URL = "https://demo-client.bhutanndi.com";
 const NDI_AUTH_URL =
   "https://staging.bhutanndi.com/authentication/v1/authenticate";
-const NDI_WEBHOOK_URL = "https://demo-client.bhutanndi.com/webhook/v1";
-const NDI_VERIFIER_URL =
-  "https://demo-client.bhutanndi.com/verifier/v1/proof-request";
+const NDI_WEBHOOK_URL = `${NDI_BASE_URL}/webhook/v1`;
+const NDI_VERIFIER_URL = `${NDI_BASE_URL}/verifier/v1/proof-request`;
+const NDI_ISSUER_URL = `${NDI_BASE_URL}/issuer/v1/issue-credential`;
 const FOUNDATION_ID_SCHEMA =
   "https://dev-schema.ngotag.com/schemas/c7952a0a-e9b5-4a4b-a714-1e5d0a1ae076";
 const ADDRESS_ID_SCHEMA =
   "https://dev-schema.ngotag.com/schemas/e3b606d0-e477-4fc2-b5ab-0adc4bd75c54";
+const CIVIC_CHAMPION_ID_SCHEMA =
+  "https://dev-schema.ngotag.com/schemas/8c9df463-776f-49d9-8684-e98895a31f0a";
 
 let ndiAccessToken: string | null = null;
 export const threadMap = new Map<string, { chatId: number; userId: number }>();
@@ -110,4 +113,20 @@ export async function createProofRequest(
   }
 
   return deepLinkURL;
+}
+
+export async function issueCredential(holderDID: string) {
+  const credentialData = {
+    "Issue Date": new Date().toLocaleDateString(),
+    "Issued By": "DeepGov",
+  };
+
+  const response = await makeNdiRequest("post", NDI_ISSUER_URL, {
+    credentialData,
+    schemaId: CIVIC_CHAMPION_ID_SCHEMA,
+    holderDID,
+  });
+  console.log("Credential issued:", response.data);
+
+  return response.data;
 }

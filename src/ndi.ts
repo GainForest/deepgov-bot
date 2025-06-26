@@ -126,6 +126,7 @@ export async function issueCredential(holderDID: string) {
     schemaId: CIVIC_CHAMPION_ID_SCHEMA,
     holderDID,
   });
+
   console.log("Credential issued:", response.data);
 
   return response.data;

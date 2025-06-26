@@ -1,44 +1,22 @@
-import { createHmac, randomBytes } from "crypto";
+import { createHmac } from "crypto";
 import "dotenv/config";
 
 const SECRET_KEY = process.env.HMAC_SECRET_KEY;
+const HASH_SALT = process.env.HASH_SALT;
 
-if (!SECRET_KEY) {
-  throw new Error("Missing HMAC_SECRET_KEY in environment variables");
+if (!SECRET_KEY || !HASH_SALT) {
+  throw new Error(
+    "Missing HMAC_SECRET_KEY or HASH_SALT in environment variables."
+  );
 }
 
 /**
- * Generates a cryptographically secure random salt.
- * @param length Length in bytes (default: 16)
- * @returns Hex-encoded salt string
+ * Deterministically hash a user ID with a fixed salt and secret key.
+ * @param userId The user ID to hash (as a string)
+ * @returns Stable, hex-encoded hash
  */
-function generateSalt(length: number = 16): string {
-  return randomBytes(length).toString("hex");
-}
-
-/**
- * Creates an HMAC-SHA256 hash of the input using a secret key and salt.
- * @param data The data to hash
- * @param salt The salt to prepend
- * @returns Hex-encoded hash
- */
-function hashWithSalt(data: string, salt: string): string {
-  const hmac = createHmac("sha256", SECRET_KEY as string);
-  hmac.update(salt + ":" + data); // Use a delimiter to avoid collisions
+export function hash(userId: string): string {
+  const hmac = createHmac("sha256", SECRET_KEY!);
+  hmac.update(HASH_SALT + ":" + userId); // Delimiter avoids collisions
   return hmac.digest("hex");
-}
-
-/**
- * Hashes data with a newly generated salt and returns both.
- * @param data The input to hash
- * @param saltLength Optional salt length
- * @returns Object with hash and salt
- */
-export function hash(
-  data: string,
-  saltLength: number = 16
-): { hash: string; salt: string } {
-  const salt = generateSalt(saltLength);
-  const hash = hashWithSalt(data, salt);
-  return { hash, salt };
 }

@@ -25,14 +25,6 @@ interface MyContext extends Context {
   session: SessionData;
 }
 
-// Rate limit messages
-const messages = {
-  rateLimited: {
-    EN: "Rate limit exceeded. Please try again later.",
-    BT: "Rate limit exceeded. Please try again later.",
-  },
-};
-
 const bot = new Telegraf<MyContext>(BOT_TOKEN);
 
 // Use session middleware
@@ -158,7 +150,7 @@ function checkRateLimit(ctx: MyContext): boolean {
 
   if (ctx.session.requestTimestamps.length >= maxRequests) {
     const lang = ctx.session.language;
-    ctx.reply(messages.rateLimited[lang]);
+    ctx.reply("Rate limit exceeded. Please try again later.");
     return false;
   }
 

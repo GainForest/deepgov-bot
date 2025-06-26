@@ -70,9 +70,15 @@ async function handleAuth(ctx: MyContext) {
 }
 
 bot.start(async (ctx: MyContext) => {
-  await ctx.reply(`Meet Takin AI, your thoughtful guide to imagining Bhutan's digital future. Together, explore how AI, Blockchain, and National Decentralized Identity can serve our wellbeing while honoring our rich traditions. Share your dreams, voice your concerns, and help shape a 2035 where technology and culture thrive in harmony.
-Your vision matters. 
-Please authenticate with NDI wallet first.
+  await ctx.replyWithMarkdownV2(`**Welcome to Takin AI — your thoughtful companion in envisioning Bhutan’s digital journey.**
+Together, let us explore how technologies like AI, Blockchain, and the National Decentralized Identity (NDI) can uplift wellbeing while honoring the wisdom of traditions. Your hopes, questions, and ideas will help shape a 2035 where innovation and culture walk hand in hand.
+
+✨ Speak your truth — through text or voice (under 1 minute)
+🔐 Please begin by authenticating with your NDI wallet
+
+You’re warmly encouraged to guide the conversation — shift topics, share new thoughts, or return to earlier dreams at any time. This space is yours to imagine freely.
+
+**Your vision matters deeply.**
 `);
   await handleAuth(ctx);
   1;

@@ -14,12 +14,11 @@ const allItems = await Promise.all(
     });
 
     return response.data
-      .filter((item: any) => item.role !== "system")
+      .filter((item: any) => item.role === "user")
       .map((msg: any) => ({
         id: msg.id,
-        content: msg.content[0]?.text,
-        userId: r.userId,
-        role: msg.role,
+        comment: msg.content[0]?.text,
+        interview: r.userId,
       }));
   })
 );
@@ -31,7 +30,7 @@ const uniqueItems = allItems
     (item, index, self) =>
       index ===
       self.findIndex(
-        (t) => t.content === item.content && t.userId === item.userId
+        (t) => t.comment === item.comment && t.interview === item.interview
       )
   );
 

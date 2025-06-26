@@ -71,8 +71,7 @@ async function handleAuth(ctx: MyContext) {
 
 bot.start(async (ctx: MyContext) => {
   await ctx.reply(`Welcome to Takin AI — your thoughtful companion in envisioning Bhutan’s digital journey.
-
-Together, let us explore how technologies like AI, Blockchain, and the National Decentralized Identity (NDI) can uplift wellbeing while honoring the wisdom of traditions. Your hopes, questions, and ideas will help shape a 2035 where innovation and culture walk hand in hand.
+Together, let us explore how technologies like AI, Blockchain, and the National Digital Identity (NDI) can uplift wellbeing while honoring the wisdom of traditions. Your hopes, questions, and ideas will help shape a 2035 where innovation and culture walk hand in hand.
 
 ✨ Speak your truth — through text or voice (under 1 minute)
 🔐 Please begin by authenticating with your NDI wallet

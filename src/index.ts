@@ -1,4 +1,4 @@
-import { Telegraf, Context } from "telegraf";
+import { Telegraf, Context, TelegramError } from "telegraf";
 import { session } from "telegraf";
 import express from "express";
 import dotenv from "dotenv";
@@ -136,26 +136,6 @@ bot.on(message("voice"), async (ctx: MyContext) => {
     await ctx.reply("Failed to process audio message. Please try again.");
   }
 });
-bot.catch(async (error, ctx) => {
-  if (error instanceof TelegramError) {
-    // Log Telegram API errors
-    logger.error(error);
-
-    const [, errorCode] = error.description.split(":");
-    const errorMessage = `Error: \`${errorCode}\``;
-
-    try {
-      // Send error message to user
-      const sendError = await ctx.replyWithMarkdownV2(errorMessage);
-      setTimeout(async () => {
-        await ctx.deleteMessage(sendError.message_id);
-      }, 4000);
-    } catch (err) {
-      // Log any error while sending or deleting the message
-      logger.error(err);
-    }
-  }
-});
 
 const app = express();
 app.use(express.json());
@@ -187,17 +167,11 @@ function checkRateLimit(ctx: MyContext): boolean {
 }
 
 (async () => {
-  const WEBHOOK_PATH = `/telegraf/${bot.secretPathComponent()}`;
-  const BASE_URL = process.env.BASE_URL; // e.g. "https://mydomain.com"
+  // const WEBHOOK_PATH = `/telegraf/${bot.secretPathComponent()}`;
+  // const BASE_URL = process.env.BASE_URL; // e.g. "https://mydomain.com"
 
-  await bot.telegram.deleteWebhook();
-  await bot.launch({
-    dropPendingUpdates: true,
-    // webhook: {
-    //   path: WEBHOOK_PATH,
-    //   domain: BASE_URL,
-    // },
-  });
+  // await bot.telegram.deleteWebhook();
+  await bot.launch();
 })();
 
 process.once("SIGINT", () => {

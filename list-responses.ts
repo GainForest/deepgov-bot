@@ -1,23 +1,10 @@
-import { eq } from "drizzle-orm";
 import * as schemas from "./src/db/schema";
 import { db } from "./src/db/client";
 import { openai } from "./src/openai";
-import { sql } from "drizzle-orm";
 
-// Query to get only the latest response for each userId
-const responses = await db
-  .execute(
-    sql`
-  SELECT DISTINCT ON (user_id) *
-  FROM responses
-  ORDER BY user_id, created_at DESC
-`
-  )
-  .then((r) => r.rows);
-
-// Query all
-// const responses = await db.select().from(schemas.responses);
+const responses = await db.select().from(schemas.responses);
 console.log(responses);
+// TODO: create a new array from responses with only the latest responseId based on createdAt
 
 const items = await Promise.all(
   responses.map(async (r) => {
@@ -25,23 +12,33 @@ const items = await Promise.all(
       limit: 100,
     });
 
+    // console.log(response.data, r.userId);
     return response.data
       .filter((d) => d.role !== "system")
-      .map((msg) => ({
-        // ...msg,
-        id: msg.id,
-        content: msg.content[0]?.text,
-        userId: r.userId,
-        role: msg.role,
-      }));
+      .map((msg) => {
+        // console.log(msg, r.userId);
+        const content = msg.content[0]?.text;
+
+        return {
+          // ...msg,
+          id: msg.id,
+          content,
+          userId: r.userId,
+          role: msg.role,
+        };
+      });
   })
 );
-console.log(JSON.stringify(items, null, 2));
 
-// TODO: Save as csv
-
-// Flatten the items array
 const flattenedItems = items.flat();
+
+const uniqueItems = flattenedItems.filter(
+  (item, index, self) =>
+    index ===
+    self.findIndex(
+      (t) => t.content === item.content && t.userId === item.userId
+    )
+);
 
 // Simple CSV export
 function saveAsCSV(data: any[], filename: string) {
@@ -77,4 +74,4 @@ function saveAsCSV(data: any[], filename: string) {
 }
 
 // Save the data
-saveAsCSV(flattenedItems, "responses.csv");
+saveAsCSV(uniqueItems, "responses.csv");

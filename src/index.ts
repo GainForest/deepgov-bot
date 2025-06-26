@@ -90,7 +90,7 @@ bot.command("claim", async (ctx: MyContext) => {
     const responses = await findResponses(userId);
     console.log(responses);
 
-    const requiredInteractions = 30;
+    const requiredInteractions = 15;
     if (responses.length < requiredInteractions) {
       return ctx.reply(
         `${responses.length}/${requiredInteractions} interactions found. Please interact more with Takin AI before claiming.`

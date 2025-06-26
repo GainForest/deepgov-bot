@@ -17,6 +17,7 @@ bun run dev
 - Voice message transcription 
 - NDI wallet integration for digital identity
 - Rate limiting and session management
+- Privacy-focused: Telegram user IDs are hashed for privacy
 
 ## Environment Setup
 

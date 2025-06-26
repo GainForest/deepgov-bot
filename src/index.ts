@@ -29,6 +29,16 @@ const bot = new Telegraf<MyContext>(BOT_TOKEN);
 // Use session middleware
 bot.use(session());
 
+// Initialize session data
+bot.use(async (ctx, next) => {
+  if (!ctx.session) {
+    ctx.session = {
+      requestTimestamps: [],
+    };
+  }
+  await next();
+});
+
 bot.start(async (ctx: MyContext) => {
   await ctx.reply("Welcome");
 });

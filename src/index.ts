@@ -40,7 +40,8 @@ bot.use(async (ctx, next) => {
 });
 
 bot.start(async (ctx: MyContext) => {
-  await ctx.reply("Welcome");
+  await ctx.reply(`Meet Takin AI, your thoughtful guide to imagining Bhutan's digital future. Together, explore how AI, Blockchain, and National Decentralized Identity can serve our wellbeing while honoring our rich traditions. Share your dreams, voice your concerns, and help shape a 2035 where technology and culture thrive in harmony.
+Your vision matters. Start the conversation.`);
 });
 
 bot.command("auth", async (ctx: MyContext) => {
@@ -49,12 +50,6 @@ bot.command("auth", async (ctx: MyContext) => {
   try {
     const chatId = ctx.chat!.id;
     const userId = ctx.from!.id;
-
-    const profile = await findProfile(String(userId));
-    if (!profile) {
-      await ctx.reply("No profile found. Please authenticate first.");
-      return;
-    }
 
     await ctx.replyWithChatAction("typing");
     await ctx.reply("Creating authentication request...");
@@ -106,6 +101,13 @@ bot.command("profile", async (ctx: MyContext) => {
   }
 });
 
+async function checkAuth(ctx: MyContext) {
+  const profile = await findProfile(String(ctx.from.id));
+  if (!profile) {
+    await ctx.reply("Please authenticate first with /auth.");
+    return;
+  }
+}
 bot.on(message("text"), async (ctx: MyContext) => {
   if (!checkRateLimit(ctx)) return;
 
@@ -114,15 +116,11 @@ bot.on(message("text"), async (ctx: MyContext) => {
     return;
   }
 
+  await checkAuth(ctx);
+
   const chatId = ctx.chat.id;
   const userId = ctx.from.id;
   const userInput = ctx.message.text;
-
-  const profile = await findProfile(String(userId));
-  if (!profile) {
-    await ctx.reply("No profile found. Please authenticate first.");
-    return;
-  }
 
   const reply = await handleMessage(chatId, userId, userInput);
   await ctx.reply(reply);

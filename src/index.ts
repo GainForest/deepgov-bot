@@ -82,7 +82,6 @@ You’re warmly encouraged to guide the conversation — shift topics, share new
 Your vision matters deeply.
 `);
   await handleAuth(ctx);
-  1;
 });
 
 bot.command("auth", handleAuth);

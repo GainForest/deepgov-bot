@@ -216,19 +216,20 @@ function checkRateLimit(ctx: MyContext): boolean {
 // await bot.telegram.deleteWebhook();
 // })();
 
-bot.settings(async (ctx) => {
-  await ctx.telegram.setMyCommands([
-    {
-      command: "/auth",
-      description: "Authenticate with NDI wallet",
-    },
-    {
-      command: "/profile",
-      description: "View your profile",
-    },
-  ]);
-  return ctx.reply("Commands set");
-});
+await bot.telegram.setMyCommands([
+  {
+    command: "/auth",
+    description: "Authenticate with NDI wallet",
+  },
+  {
+    command: "/profile",
+    description: "View your profile",
+  },
+  {
+    command: "/claim",
+    description: "Claim your credential",
+  },
+]);
 
 await bot.launch();
 

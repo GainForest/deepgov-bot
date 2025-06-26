@@ -51,16 +51,12 @@ async function handleAuth(ctx: MyContext) {
     await ensureWebhook();
     const link = await createProofRequest(chatId, userId);
 
+    const url = `${LINK_URL}?link=${encodeURIComponent(link)} 
+    `;
+    console.log(url);
     await ctx.reply("🔒 Authenticate via Bhutan NDI Wallet:", {
       reply_markup: {
-        inline_keyboard: [
-          [
-            {
-              text: "Authenticate",
-              url: `${LINK_URL}?link=${encodeURIComponent(link)}`,
-            },
-          ],
-        ],
+        inline_keyboard: [[{ text: "Authenticate", url }]],
       },
     });
   } catch (error) {

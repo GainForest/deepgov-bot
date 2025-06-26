@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm";
 import { db } from "./client";
 import { proofs, responses } from "./schema";
 
@@ -17,4 +18,12 @@ export async function insertResponse(
   responseId: string
 ) {
   await db.insert(responses).values({ userId, chatId, responseId });
+}
+
+export async function findProfile(userId: string) {
+  return db
+    .select()
+    .from(proofs)
+    .where(eq(proofs.userId, userId))
+    .then((r) => r?.[0] ?? null);
 }

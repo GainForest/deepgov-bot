@@ -7,6 +7,7 @@ import { handleWebhook } from "./webhook";
 import { message } from "telegraf/filters";
 import { handleMessage } from "./openai";
 import { transcribeAudio } from "./transcription";
+import { findProfile } from "./db/api";
 
 dotenv.config();
 
@@ -71,6 +72,34 @@ bot.command("auth", async (ctx: MyContext) => {
   } catch (error) {
     console.error("Auth command error:", error);
     await ctx.reply("Authentication setup failed. Please try again.");
+  }
+});
+
+bot.command("profile", async (ctx: MyContext) => {
+  if (!checkRateLimit(ctx)) return;
+
+  try {
+    const chatId = ctx.chat!.id;
+    const userId = ctx.from!.id;
+    console.log({ userId });
+    const profile = await findProfile(String(userId));
+    console.log(profile);
+    if (!profile) return ctx.reply("No profile found");
+    await ctx.replyWithMarkdownV2(
+      `*👤 User Profile*
+
+*Gender:* ${profile.gender}
+*Date of Birth:* ${new Date(profile.dob).toLocaleDateString()}
+*Citizenship:* ${profile.citizenship}
+*Address:*
+• Village: ${profile.address1}
+• Gewog: ${profile.address2}
+• Dzongkhag: ${profile.address3}
+    `
+    );
+  } catch (error) {
+    console.error("Profile command error:", error);
+    await ctx.reply("Fetching profile failed. Please try again.");
   }
 });
 
@@ -158,13 +187,14 @@ function checkRateLimit(ctx: MyContext): boolean {
   return true;
 }
 
-(async () => {
-  // const WEBHOOK_PATH = `/telegraf/${bot.secretPathComponent()}`;
-  // const BASE_URL = process.env.BASE_URL; // e.g. "https://mydomain.com"
+// (async () => {
+// const WEBHOOK_PATH = `/telegraf/${bot.secretPathComponent()}`;
+// const BASE_URL = process.env.BASE_URL; // e.g. "https://mydomain.com"
 
-  // await bot.telegram.deleteWebhook();
-  await bot.launch();
-})();
+// await bot.telegram.deleteWebhook();
+// })();
+
+await bot.launch();
 
 process.once("SIGINT", () => {
   console.info("SIGINT received");

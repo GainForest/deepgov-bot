@@ -1,10 +1,9 @@
-import { Telegraf, Context, TelegramError } from "telegraf";
+import { Telegraf, Context } from "telegraf";
 import { session } from "telegraf";
 import express from "express";
 import dotenv from "dotenv";
 import { ensureWebhook, createProofRequest } from "./ndi";
 import { handleWebhook } from "./webhook";
-import { message } from "telegraf/filters";
 import { handleMessage } from "./openai";
 import { transcribeAudio } from "./transcription";
 import { findProfile } from "./db/api";
@@ -17,7 +16,6 @@ const PORT = parseInt(process.env.PORT || "3000", 10);
 
 // Define session interface
 interface SessionData {
-  language: "EN" | "BT";
   requestTimestamps: number[];
 }
 
@@ -30,17 +28,6 @@ const bot = new Telegraf<MyContext>(BOT_TOKEN);
 
 // Use session middleware
 bot.use(session());
-
-// Initialize session data
-bot.use(async (ctx, next) => {
-  if (!ctx.session) {
-    ctx.session = {
-      language: "EN",
-      requestTimestamps: [],
-    };
-  }
-  await next();
-});
 
 bot.start(async (ctx: MyContext) => {
   await ctx.reply("Welcome");
@@ -81,9 +68,7 @@ bot.command("profile", async (ctx: MyContext) => {
   try {
     const chatId = ctx.chat!.id;
     const userId = ctx.from!.id;
-    console.log({ userId });
     const profile = await findProfile(String(userId));
-    console.log(profile);
     if (!profile) return ctx.reply("No profile found");
     await ctx.replyWithMarkdownV2(
       `*👤 User Profile*
@@ -129,7 +114,6 @@ bot.on(message("voice"), async (ctx: MyContext) => {
 
   const chatId = ctx.chat.id;
   const userId = ctx.from.id;
-  console.log("voice", chatId);
 
   try {
     await ctx.reply("🎵 Processing your voice message...");

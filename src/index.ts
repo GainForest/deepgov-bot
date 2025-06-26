@@ -85,7 +85,9 @@ bot.command("claim", async (ctx: MyContext) => {
   try {
     if (!checkRateLimit(ctx)) return;
 
-    const responses = await findResponses(ctx.from!.id);
+    const chatId = String(ctx.chat?.id);
+    const userId = String(ctx.from?.id);
+    const responses = await findResponses(userId);
     console.log(responses);
 
     const requiredInteractions = 30;
@@ -97,8 +99,19 @@ bot.command("claim", async (ctx: MyContext) => {
     await ctx.reply(`${responses.length} interactions with Takin AI!`);
 
     await ctx.reply("Claiming credential...");
-    await issueCredential(ctx.from!.id);
-    return ctx.reply("Claimed credential! Check your Bhutan NDI Wallet.");
+    await ensureWebhook();
+    const link = await issueCredential(chatId, userId);
+
+    const url = `${LINK_URL}?link=${encodeURIComponent(link)} 
+    `;
+    console.log(url);
+    return ctx.reply("🔒 Claim via Bhutan NDI Wallet:", {
+      reply_markup: {
+        inline_keyboard: [[{ text: "Claim", url }]],
+      },
+    });
+
+    // return ctx.reply("Claimed credential! Check your Bhutan NDI Wallet.");
   } catch (error) {
     console.error("Claim command error:", error);
     await ctx.reply("Failed to claim credential. Please try again.");

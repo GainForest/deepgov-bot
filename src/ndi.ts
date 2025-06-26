@@ -1,5 +1,6 @@
 import axios, { AxiosError } from "axios";
 import dotenv from "dotenv";
+import { findProfile } from "./db/api";
 
 dotenv.config();
 
@@ -115,19 +116,31 @@ export async function createProofRequest(
   return deepLinkURL;
 }
 
-export async function issueCredential(holderDID: string) {
+export async function issueCredential(chatId: string, userId: string) {
   const credentialData = {
     "Issue Date": new Date().toLocaleDateString(),
     "Issued By": "DeepGov",
   };
 
-  const response = await makeNdiRequest("post", NDI_ISSUER_URL, {
+  const profile = await findProfile(userId);
+
+  const issueRes = await makeNdiRequest("post", NDI_ISSUER_URL, {
     credentialData,
     schemaId: CIVIC_CHAMPION_ID_SCHEMA,
-    holderDID,
+    holderDID: profile?.did,
   });
 
-  console.log("Credential issued:", response.data);
+  const { issueCredThreadId, deepLinkURL } = issueRes.data.data;
+  threadMap.set(issueCredThreadId, { chatId, userId });
 
-  return response.data;
+  try {
+    await makeNdiRequest("post", `${NDI_WEBHOOK_URL}/subscribe`, {
+      webhookId: WEBHOOK_ID,
+      threadId: issueCredThreadId,
+    });
+  } catch (err) {
+    if ((err as AxiosError).response?.status !== 409) throw err;
+  }
+
+  return deepLinkURL;
 }

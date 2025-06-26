@@ -50,6 +50,7 @@ bot.command("auth", async (ctx: MyContext) => {
     const chatId = ctx.chat!.id;
     const userId = ctx.from!.id;
 
+    await ctx.replyWithChatAction("typing");
     await ctx.reply("Creating authentication request...");
     await ensureWebhook();
     const link = await createProofRequest(chatId, userId);
@@ -76,7 +77,7 @@ bot.command("profile", async (ctx: MyContext) => {
   if (!checkRateLimit(ctx)) return;
 
   try {
-    const chatId = ctx.chat!.id;
+    await ctx.replyWithChatAction("typing");
     const userId = ctx.from!.id;
     const profile = await findProfile(String(userId));
     if (!profile) return ctx.reply("No profile found");
@@ -186,6 +187,20 @@ function checkRateLimit(ctx: MyContext): boolean {
 
 // await bot.telegram.deleteWebhook();
 // })();
+
+bot.settings(async (ctx) => {
+  await ctx.telegram.setMyCommands([
+    {
+      command: "/auth",
+      description: "Authenticate with NDI wallet",
+    },
+    {
+      command: "/profile",
+      description: "View your profile",
+    },
+  ]);
+  return ctx.reply("Commands set");
+});
 
 await bot.launch();
 

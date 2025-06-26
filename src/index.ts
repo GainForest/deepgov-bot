@@ -1,4 +1,4 @@
-import { Telegraf, Context } from "telegraf";
+import { Telegraf, Context, message } from "telegraf";
 import { session } from "telegraf";
 import express from "express";
 import dotenv from "dotenv";
@@ -162,7 +162,6 @@ function checkRateLimit(ctx: MyContext): boolean {
   );
 
   if (ctx.session.requestTimestamps.length >= maxRequests) {
-    const lang = ctx.session.language;
     ctx.reply("Rate limit exceeded. Please try again later.");
     return false;
   }

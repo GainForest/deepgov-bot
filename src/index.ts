@@ -1,5 +1,5 @@
-import { Telegraf, Context, message } from "telegraf";
-import { session } from "telegraf";
+import { Telegraf, Context, session } from "telegraf";
+import { message } from "telegraf/filters";
 import express from "express";
 import dotenv from "dotenv";
 import { ensureWebhook, createProofRequest } from "./ndi";

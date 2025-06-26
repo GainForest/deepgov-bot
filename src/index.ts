@@ -39,12 +39,7 @@ bot.use(async (ctx, next) => {
   await next();
 });
 
-bot.start(async (ctx: MyContext) => {
-  await ctx.reply(`Meet Takin AI, your thoughtful guide to imagining Bhutan's digital future. Together, explore how AI, Blockchain, and National Decentralized Identity can serve our wellbeing while honoring our rich traditions. Share your dreams, voice your concerns, and help shape a 2035 where technology and culture thrive in harmony.
-Your vision matters. Start the conversation.`);
-});
-
-bot.command("auth", async (ctx: MyContext) => {
+async function handleAuth(ctx: MyContext) {
   if (!checkRateLimit(ctx)) return;
 
   try {
@@ -72,7 +67,18 @@ bot.command("auth", async (ctx: MyContext) => {
     console.error("Auth command error:", error);
     await ctx.reply("Authentication setup failed. Please try again.");
   }
+}
+
+bot.start(async (ctx: MyContext) => {
+  await ctx.reply(`Meet Takin AI, your thoughtful guide to imagining Bhutan's digital future. Together, explore how AI, Blockchain, and National Decentralized Identity can serve our wellbeing while honoring our rich traditions. Share your dreams, voice your concerns, and help shape a 2035 where technology and culture thrive in harmony.
+Your vision matters. 
+Please authenticate with NDI wallet first.
+`);
+  await handleAuth(ctx);
+  1;
 });
+
+bot.command("auth", handleAuth);
 
 bot.command("profile", async (ctx: MyContext) => {
   if (!checkRateLimit(ctx)) return;

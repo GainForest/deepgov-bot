@@ -50,6 +50,12 @@ bot.command("auth", async (ctx: MyContext) => {
     const chatId = ctx.chat!.id;
     const userId = ctx.from!.id;
 
+    const profile = await findProfile(String(userId));
+    if (!profile) {
+      await ctx.reply("No profile found. Please authenticate first.");
+      return;
+    }
+
     await ctx.replyWithChatAction("typing");
     await ctx.reply("Creating authentication request...");
     await ensureWebhook();
@@ -80,7 +86,8 @@ bot.command("profile", async (ctx: MyContext) => {
     await ctx.replyWithChatAction("typing");
     const userId = ctx.from!.id;
     const profile = await findProfile(String(userId));
-    if (!profile) return ctx.reply("No profile found");
+    if (!profile)
+      return ctx.reply("No profile found. Please authenticate first.");
     await ctx.replyWithMarkdownV2(
       `*👤 User Profile*
 
@@ -110,6 +117,12 @@ bot.on(message("text"), async (ctx: MyContext) => {
   const chatId = ctx.chat.id;
   const userId = ctx.from.id;
   const userInput = ctx.message.text;
+
+  const profile = await findProfile(String(userId));
+  if (!profile) {
+    await ctx.reply("No profile found. Please authenticate first.");
+    return;
+  }
 
   const reply = await handleMessage(chatId, userId, userInput);
   await ctx.reply(reply);

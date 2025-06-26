@@ -38,7 +38,7 @@ export async function handleMessage(
       store: true,
     });
 
-    await insertResponse(String(userId), String(chatId), response.id);
+    await insertResponse(String(userId), response.id);
 
     // Store the response ID for future context
     chatStates.set(chatId, response.id);

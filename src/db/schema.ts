@@ -16,7 +16,6 @@ export const proofs = pgTable("proofs", {
 export const responses = pgTable("responses", {
   id: serial("id").primaryKey(),
   userId: text("user_id").notNull(),
-  chatId: text("chat_id").notNull(),
   responseId: text("response_id").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

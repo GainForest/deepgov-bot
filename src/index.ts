@@ -2,11 +2,20 @@ import { Telegraf, Context, session } from "telegraf";
 import { message } from "telegraf/filters";
 import express from "express";
 import dotenv from "dotenv";
-import { ensureWebhook, createProofRequest, issueCredential } from "./ndi";
+import { v4 as uuidv4 } from "uuid";
+import QRCode from "qrcode";
+import { ensureWebhook, issueCredential } from "./ndi";
 import { handleWebhook } from "./webhook";
 import { handleMessage } from "./openai";
 import { transcribeAudio } from "./transcription";
 import { findProfile, findResponses } from "./db/api";
+import {
+  initWebSocket,
+  REDIRECT_URL,
+  QRcodeSteps,
+  WS_DB_RELAYER,
+} from "./self";
+import { createSelfApp } from "./self/config";
 
 dotenv.config();
 
@@ -17,6 +26,8 @@ const PORT = parseInt(process.env.PORT || "3000", 10);
 // Define session interface
 interface SessionData {
   requestTimestamps: number[];
+  websocketCleanup?: () => void;
+  sessionId?: string;
 }
 
 // Extend context to include session
@@ -46,19 +57,86 @@ async function handleAuth(ctx: MyContext) {
     const chatId = ctx.chat!.id;
     const userId = ctx.from!.id;
 
-    await ctx.replyWithChatAction("typing");
-    await ctx.reply("Creating authentication request...");
-    await ensureWebhook();
-    const link = await createProofRequest(chatId, userId);
+    // Clean up any existing WebSocket connection
+    if (ctx.session.websocketCleanup) {
+      ctx.session.websocketCleanup();
+    }
 
-    const url = `${LINK_URL}?link=${encodeURIComponent(link)} 
-    `;
-    console.log(url);
-    await ctx.reply("🔒 Authenticate via Bhutan NDI Wallet:", {
-      reply_markup: {
-        inline_keyboard: [[{ text: "Authenticate", url }]],
+    // Generate a new session ID
+    const selfApp = createSelfApp(userId.toString());
+
+    // Create a SelfApp configuration for the WebSocket
+
+    // Set up WebSocket connection
+    const cleanup = initWebSocket(
+      WS_DB_RELAYER,
+      selfApp,
+      "websocket",
+      (step: number) => {
+        // Handle proof step updates
+        switch (step) {
+          case QRcodeSteps.MOBILE_CONNECTED:
+            ctx.reply(
+              "📱 Mobile device connected. Please complete authentication in the app."
+            );
+            break;
+          case QRcodeSteps.PROOF_GENERATION_STARTED:
+            ctx.reply("🔐 Proof generation started...");
+            break;
+          case QRcodeSteps.PROOF_GENERATED:
+            ctx.reply("✅ Proof generated successfully!");
+            break;
+          case QRcodeSteps.PROOF_VERIFIED:
+            ctx.reply(
+              "🎉 Authentication successful! You can now use Takin AI."
+            );
+            break;
+          case QRcodeSteps.PROOF_GENERATION_FAILED:
+            ctx.reply("❌ Authentication failed. Please try again.");
+            break;
+        }
+      },
+      () => {
+        // On success
+        cleanup();
+      },
+      (error) => {}
+    );
+
+    // Store cleanup function in session
+    ctx.session.websocketCleanup = cleanup;
+
+    // Display the redirect URL to the user
+    const redirectUrl = `${REDIRECT_URL}?sessionId=${selfApp.sessionId}`;
+    console.log("Redirect URL:", redirectUrl);
+
+    // Generate QR code
+    const qrCodeDataUrl = await QRCode.toDataURL(redirectUrl, {
+      width: 300,
+      margin: 2,
+      color: {
+        dark: "#000000",
+        light: "#FFFFFF",
       },
     });
+
+    // Convert data URL to buffer for Telegram
+    const qrCodeBuffer = Buffer.from(qrCodeDataUrl.split(",")[1]!, "base64");
+
+    // Send QR code as photo
+    await ctx.replyWithChatAction("typing");
+    await ctx.replyWithPhoto(
+      { source: qrCodeBuffer },
+      {
+        caption:
+          "Scan this QR code using the Self.xyz app, or hit the button below to authenticate.",
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: "🫆 Authenticate using Self.xyz →", url: redirectUrl }],
+          ],
+        },
+      }
+    );
   } catch (error) {
     console.error("Auth command error:", error);
     await ctx.reply("Authentication setup failed. Please try again.");
@@ -66,16 +144,16 @@ async function handleAuth(ctx: MyContext) {
 }
 
 bot.start(async (ctx: MyContext) => {
-  await ctx.reply(`Welcome to Takin AI — your thoughtful companion in envisioning Bhutan’s digital journey.
-Together, let us explore how emerging technologies like AI, Blockchain, and the National Digital Identity (NDI) can uplift wellbeing while honoring the wisdom of traditions. Your hopes, questions, and ideas will help shape a 2035 where innovation and culture walk hand in hand.
+  await ctx.reply(`Welcome to GainForest — your thoughtful companion in envisioning GainForest's future.
+Together, let us explore how emerging technologies like AI, Blockchain or any other tech that you think of can uplift wellbeing while honoring the wisdom of traditions. Your hopes, feedbacks, bug reports, questions, and ideas will help shape a better future for GainForest.
 
-✨ Speak your truth — through text or voice (under 1 minute)
-🔐 Please begin by authenticating with your NDI wallet
-🌱 Your data is private and all of our code is open-source
+✨ Speak your truth — through text or voice (under 1 minute) 
+🔐 Please begin by authenticating with Self.xyz
+🌱 Your data is private and all the code is open-sourced
 
-You’re warmly encouraged to guide the conversation — shift topics, share new thoughts, or return to earlier dreams at any time. This space is yours to imagine freely.
+You're warmly encouraged to guide the conversation — shift topics, share new thoughts, or return to earlier dreams at any time. This space is yours to imagine freely.
 
-Your vision matters deeply. Live results: bhutan.deepgov.org
+Your vision matters deeply.
 `);
   await handleAuth(ctx);
 });
@@ -88,16 +166,17 @@ bot.command("claim", async (ctx: MyContext) => {
 
     const chatId = String(ctx.chat?.id);
     const userId = String(ctx.from?.id);
+    await ctx.replyWithChatAction("typing");
     const responses = await findResponses(userId);
     console.log(responses);
 
     const requiredInteractions = 15;
     if (responses.length < requiredInteractions) {
       return ctx.reply(
-        `${responses.length}/${requiredInteractions} interactions found. Please interact more with Takin AI before claiming.`
+        `${responses.length}/${requiredInteractions} interactions found. Please interact more with GainForest before claiming.`
       );
     }
-    await ctx.reply(`${responses.length} interactions with Takin AI!`);
+    await ctx.reply(`${responses.length} interactions with GainForest!`);
 
     await ctx.reply("Claiming credential...");
     await ensureWebhook();
@@ -106,7 +185,7 @@ bot.command("claim", async (ctx: MyContext) => {
     const url = `${LINK_URL}?link=${encodeURIComponent(link)} 
     `;
     console.log(url);
-    return ctx.reply("🔒 Claim via Bhutan NDI Wallet:", {
+    return ctx.reply("🔒 Claim via Self.xyz:", {
       reply_markup: {
         inline_keyboard: [[{ text: "Claim", url }]],
       },
@@ -238,7 +317,7 @@ function checkRateLimit(ctx: MyContext): boolean {
 await bot.telegram.setMyCommands([
   {
     command: "/auth",
-    description: "Authenticate with NDI wallet",
+    description: "Authenticate with Self.xyz",
   },
   {
     command: "/profile",

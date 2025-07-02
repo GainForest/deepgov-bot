@@ -35,7 +35,7 @@ export async function getNdiAccessToken(): Promise<string> {
   });
 
   ndiAccessToken = res.data.access_token;
-  return ndiAccessToken;
+  return ndiAccessToken!;
 }
 
 export async function makeNdiRequest(
@@ -131,7 +131,10 @@ export async function issueCredential(chatId: string, userId: string) {
   });
 
   const { issueCredThreadId, deepLinkURL } = issueRes.data.data;
-  threadMap.set(issueCredThreadId, { chatId, userId });
+  threadMap.set(issueCredThreadId, {
+    chatId: Number(chatId),
+    userId: Number(userId),
+  });
 
   try {
     await makeNdiRequest("post", `${NDI_WEBHOOK_URL}/subscribe`, {

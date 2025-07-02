@@ -88,7 +88,7 @@ async function handleAuth(ctx: MyContext) {
             break;
           case QRcodeSteps.PROOF_VERIFIED:
             ctx.reply(
-              "🎉 Authentication successful! You can now use Takin AI."
+              "🎉 Authentication successful! You can now use GainForest bot."
             );
             break;
           case QRcodeSteps.PROOF_GENERATION_FAILED:

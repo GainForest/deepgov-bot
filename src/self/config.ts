@@ -8,7 +8,7 @@ export const createSelfApp = (userId: string) => {
   const selfApp = new SelfAppBuilder({
     appName: "GainForest Bot",
     scope: "gainforest",
-    endpoint: "https://gainforest-self-xyz-creds.vercel.app" + "/api/verify",
+    endpoint: `${process.env.SELF_BACKEND_ENDPOINT}/api/verify`,
     logoBase64: logo, // You can add a base64 logo here if needed
     userId: userIdUuId,
     disclosures: {

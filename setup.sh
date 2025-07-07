@@ -32,57 +32,6 @@ print_info() {
     echo -e "${BLUE}ℹ️  $1${NC}"
 }
 
-# Get project information
-PROJECT_ID=$(gcloud config get-value project)
-if [ -z "$PROJECT_ID" ]; then
-    print_error "No project selected. Please run: gcloud config set project YOUR_PROJECT_ID"
-    exit 1
-fi
-
-print_info "Current project: $PROJECT_ID"
-DEPLOYMENT_URL="https://${PROJECT_ID}.uc.r.appspot.com"
-
-echo ""
-echo "Step 1: Enable required APIs"
-echo "=============================="
-
-# Enable required APIs
-print_info "Enabling App Engine Admin API..."
-gcloud services enable appengine.googleapis.com
-
-print_info "Enabling Secret Manager API..."
-gcloud services enable secretmanager.googleapis.com
-
-print_info "Enabling Cloud Build API..."
-gcloud services enable cloudbuild.googleapis.com
-
-print_status "Required APIs enabled"
-
-echo ""
-echo "Step 2: Create App Engine application"
-echo "====================================="
-
-# Check if App Engine app exists
-if ! gcloud app describe &>/dev/null; then
-    print_info "App Engine application not found. Creating one..."
-    echo "Available regions:"
-    echo "- us-central (Iowa)"
-    echo "- us-east1 (South Carolina)"  
-    echo "- europe-west (Belgium)"
-    echo "- asia-northeast1 (Tokyo)"
-    echo "- For full list: https://cloud.google.com/appengine/docs/locations"
-    
-    read -p "Enter your preferred region (e.g., us-central): " REGION
-    gcloud app create --region=$REGION
-    print_status "App Engine application created in $REGION"
-else
-    print_status "App Engine application already exists"
-fi
-
-echo ""
-echo "Step 3: Set up Secret Manager for environment variables"
-echo "========================================================"
-
 # Function to create or update secret
 create_or_update_secret() {
     local secret_name=$1
@@ -166,6 +115,57 @@ parse_env_content() {
     done <<< "$env_content"
 }
 
+# Get project information
+PROJECT_ID=$(gcloud config get-value project)
+if [ -z "$PROJECT_ID" ]; then
+    print_error "No project selected. Please run: gcloud config set project YOUR_PROJECT_ID"
+    exit 1
+fi
+
+print_info "Current project: $PROJECT_ID"
+DEPLOYMENT_URL="https://${PROJECT_ID}.uc.r.appspot.com"
+
+echo ""
+echo "Step 1: Enable required APIs"
+echo "=============================="
+
+# Enable required APIs
+print_info "Enabling App Engine Admin API..."
+gcloud services enable appengine.googleapis.com
+
+print_info "Enabling Secret Manager API..."
+gcloud services enable secretmanager.googleapis.com
+
+print_info "Enabling Cloud Build API..."
+gcloud services enable cloudbuild.googleapis.com
+
+print_status "Required APIs enabled"
+
+echo ""
+echo "Step 2: Create App Engine application"
+echo "====================================="
+
+# Check if App Engine app exists
+if ! gcloud app describe &>/dev/null; then
+    print_info "App Engine application not found. Creating one..."
+    echo "Available regions:"
+    echo "- us-central (Iowa)"
+    echo "- us-east1 (South Carolina)"  
+    echo "- europe-west (Belgium)"
+    echo "- asia-northeast1 (Tokyo)"
+    echo "- For full list: https://cloud.google.com/appengine/docs/locations"
+    
+    read -p "Enter your preferred region (e.g., us-central): " REGION
+    gcloud app create --region=$REGION
+    print_status "App Engine application created in $REGION"
+else
+    print_status "App Engine application already exists"
+fi
+
+echo ""
+echo "Step 3: Set up Secret Manager for environment variables"
+echo "========================================================"
+
 # Collect environment variables
 echo "🔐 Environment Variables & Secrets Setup"
 echo "========================================"
@@ -248,7 +248,62 @@ while true; do
                 if [[ "$line" == "END_ENV" ]]; then
                     break
                 fi
-                env_content+="$line"
+                env_content+="$line"$'\n'
+            done
+            
+            if [ -z "$env_content" ]; then
+                print_error "No content provided!"
+                continue
+            fi
+            
+            print_info "Parsing .env content..."
+            parse_env_content "$env_content"
+            print_status ".env file parsing completed!"
+            ;;
+        4)
+            echo ""
+            print_info "📋 Configured Variables:"
+            echo "========================"
+            
+            if [ ${#SECRET_VARS[@]} -gt 0 ]; then
+                echo ""
+                echo "🔐 Secrets (stored in Secret Manager):"
+                for secret_name in "${!SECRET_VARS[@]}"; do
+                    echo "  $secret_name -> ${SECRET_VARS[$secret_name]}"
+                done
+            fi
+            
+            if [ ${#ENV_VARS[@]} -gt 0 ]; then
+                echo ""
+                echo "🌍 Environment Variables:"
+                for env_name in "${!ENV_VARS[@]}"; do
+                    echo "  $env_name = ${ENV_VARS[$env_name]}"
+                done
+            fi
+            
+            # Always show DEPLOYMENT_URL
+            echo ""
+            echo "🌐 Auto-configured:"
+            echo "  DEPLOYMENT_URL = $DEPLOYMENT_URL"
+            
+            if [ ${#SECRET_VARS[@]} -eq 0 ] && [ ${#ENV_VARS[@]} -eq 0 ]; then
+                print_warning "No variables configured yet!"
+            fi
+            ;;
+        5)
+            # Validate required variables
+            if [[ ! " ${!SECRET_VARS[@]} " =~ " BOT_TOKEN " ]]; then
+                print_error "BOT_TOKEN is required! Please add it as a secret."
+                continue
+            fi
+            
+            print_status "Environment variables configuration complete!"
+            break
+            ;;
+        *)
+            print_error "Invalid choice! Please enter 1-5."
+            ;;
+    esac
 done
 
 print_status "Secrets created in Secret Manager"
@@ -444,12 +499,12 @@ if [ -f "package.json" ]; then
     # Use jq to update package.json if available, otherwise provide manual instructions
     if command -v jq &> /dev/null; then
         # Add start script if it doesn't exist
-        jq '.scripts.start = "bun run index.js"' package.json > package.json.tmp && mv package.json.tmp package.json
+        jq '.scripts.start = "node index.js"' package.json > package.json.tmp && mv package.json.tmp package.json
         print_status "package.json updated with start script"
     else
         print_warning "Please ensure your package.json has a 'start' script:"
         echo '  "scripts": {'
-        echo '    "start": "bun run index.js"'
+        echo '    "start": "node index.js"'
         echo '  }'
     fi
 else

@@ -139,6 +139,10 @@ gcloud services enable secretmanager.googleapis.com
 print_info "Enabling Cloud Build API..."
 gcloud services enable cloudbuild.googleapis.com
 
+# Also enable Cloud Build for IAM if using custom builds
+print_info "Enabling additional Cloud Build services..."
+gcloud services enable compute.googleapis.com
+
 print_status "Required APIs enabled"
 
 echo ""
@@ -472,6 +476,15 @@ if [ ! -f "package.json" ]; then
     exit 1
 fi
 
+# Check for custom build configuration
+USE_CUSTOM_BUILD=false
+if [ -f "cloudbuild.yaml" ]; then
+    print_info "Found cloudbuild.yaml - will use custom Cloud Build with Bun"
+    USE_CUSTOM_BUILD=true
+else
+    print_info "No cloudbuild.yaml found - will use standard App Engine deployment"
+fi
+
 print_status "Deployment files verification completed"
 
 echo ""
@@ -498,14 +511,17 @@ if [ -f "package.json" ]; then
     
     # Use jq to update package.json if available, otherwise provide manual instructions
     if command -v jq &> /dev/null; then
-        # Add start script if it doesn't exist
-        jq '.scripts.start = "node index.js"' package.json > package.json.tmp && mv package.json.tmp package.json
-        print_status "package.json updated with start script"
+        if [ "$USE_CUSTOM_BUILD" = true ]; then
+            # For custom build with Bun
+            jq '.scripts.start = "node index.js" | .scripts.build = "tsc" | .scripts["gcp-build"] = "echo Custom build handles compilation"' package.json > package.json.tmp && mv package.json.tmp package.json
+            print_status "package.json updated for custom Bun build"
+        else
+            # For standard App Engine deployment
+            jq '.scripts.start = "node index.js"' package.json > package.json.tmp && mv package.json.tmp package.json
+            print_status "package.json updated with start script"
+        fi
     else
-        print_warning "Please ensure your package.json has a 'start' script:"
-        echo '  "scripts": {'
-        echo '    "start": "node index.js"'
-        echo '  }'
+        print_warning "Please ensure your package.json has appropriate scripts for your build method"
     fi
 else
     print_warning "package.json not found. Please ensure it exists with proper scripts."
@@ -518,14 +534,28 @@ echo "============================="
 print_info "Starting deployment..."
 print_warning "This may take a few minutes..."
 
-# Deploy with automatic promotion
-gcloud app deploy --quiet --promote
-
-if [ $? -eq 0 ]; then
-    print_status "Deployment successful!"
+# Deploy with custom build or standard deployment
+if [ "$USE_CUSTOM_BUILD" = true ]; then
+    print_info "Using custom Cloud Build with Bun..."
+    gcloud builds submit --config cloudbuild.yaml .
+    
+    if [ $? -eq 0 ]; then
+        print_status "Custom build completed successfully!"
+    else
+        print_error "Custom build failed!"
+        exit 1
+    fi
 else
-    print_error "Deployment failed!"
-    exit 1
+    print_info "Using standard App Engine deployment..."
+    # Deploy with automatic promotion
+    gcloud app deploy --quiet --promote
+    
+    if [ $? -eq 0 ]; then
+        print_status "Deployment successful!"
+    else
+        print_error "Deployment failed!"
+        exit 1
+    fi
 fi
 
 echo ""

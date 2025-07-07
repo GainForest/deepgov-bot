@@ -60,15 +60,15 @@ steps:
       - "-c"
       - |
         echo "Getting service URL..."
-        SERVICE_URL=$(gcloud run services describe deepgovbot --region=us-central1 --format="value(status.url)")
-        echo "Service URL: $SERVICE_URL"
+        URL=$(gcloud run services describe deepgovbot --region=us-central1 --format="value(status.url)")
+        echo "Service URL: $URL"
 
         echo "Updating DEPLOYMENT_URL environment variable..."
         gcloud run services update deepgovbot \
           --region=us-central1 \
-          --set-env-vars="NODE_ENV=production,DEPLOYMENT_URL=$SERVICE_URL"
+          --set-env-vars="NODE_ENV=production,DEPLOYMENT_URL=$URL"
 
-        echo "✅ DEPLOYMENT_URL set to: $SERVICE_URL"
+        echo "✅ DEPLOYMENT_URL set to: $URL"
 
 # Push image to Artifact Registry
 images:

@@ -42,6 +42,7 @@ steps:
     args:
       - -c
       - |
+        echo "Fetching current service URL..."
         SERVICE_URL=$(gcloud run services describe deepgovbot \
           --platform=managed \
           --region=us-central1 \
@@ -58,9 +59,9 @@ steps:
           --memory=512Mi \
           --cpu=1 \
           --max-instances=10 \
-          --set-env-vars="NODE_ENV=production" \
-          --set-env-vars="DEPLOYMENT_URL=${SERVICE_URL}" \
-          --set-secrets="BOT_TOKEN=bot-token:latest,DATABASE_URL=database-url:latest,WHISPER_API_KEY=whisper-api-key:latest,SELF_BACKEND_ENDPOINT=self-backend-endpoint:latest,OPENAI_API_KEY=openai-api-key:latest,ASSISTANT_ID=assistant-id:latest,HMAC_SECRET_KEY=hmac-secret-key:latest,HASH_SALT=hash-salt:latest"
+          --set-env-vars=NODE_ENV=production \
+          --set-env-vars=$(printf 'DEPLOYMENT_URL=%s' "${SERVICE_URL}") \
+          --set-secrets=BOT_TOKEN=bot-token:latest,DATABASE_URL=database-url:latest,WHISPER_API_KEY=whisper-api-key:latest,SELF_BACKEND_ENDPOINT=self-backend-endpoint:latest,OPENAI_API_KEY=openai-api-key:latest,ASSISTANT_ID=assistant-id:latest,HMAC_SECRET_KEY=hmac-secret-key:latest,HASH_SALT=hash-salt:latest
 
   # Deploy to Cloud Run with environment variables from Secret Manager
   # - name: "gcr.io/cloud-builders/gcloud"

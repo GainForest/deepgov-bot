@@ -17,7 +17,7 @@ dotenv.config();
 
 const BOT_TOKEN = process.env.BOT_TOKEN!;
 const PORT = parseInt(process.env.PORT || "8080", 10);
-const DEPLOYMENT_URL = process.env.DEPLOYMENT_URL;
+const DEPLOYMENT_URL = "https://deepgovbot.uc.r.appspot.com";
 const WEBHOOK_PATH = `/webhook/telegram/${BOT_TOKEN}`;
 
 // Define session interface

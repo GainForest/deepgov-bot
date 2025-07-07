@@ -21,13 +21,13 @@ const PORT = parseInt(process.env.PORT || "8080", 10);
 let DEPLOYMENT_URL = process.env.DEPLOYMENT_URL;
 if (!DEPLOYMENT_URL) {
   // Function to get Cloud Run URL dynamically
-  async function getCloudRunUrl(): Promise<string | null> {
+  async function getCloudRunUrl(): Promise<string | undefined> {
     try {
       const serviceName = process.env.K_SERVICE;
 
       if (!serviceName) {
         console.log("⚠️  K_SERVICE not found, not running on Cloud Run");
-        return null;
+        return undefined;
       }
 
       const regionUrl =
@@ -44,7 +44,7 @@ if (!DEPLOYMENT_URL) {
       return serviceUrl;
     } catch (error) {
       console.error("❌ Error getting Cloud Run URL:", error);
-      return null;
+      return undefined;
     }
   }
   DEPLOYMENT_URL = await getCloudRunUrl();

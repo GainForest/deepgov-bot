@@ -22,4 +22,4 @@ RUN if [ -f "tsconfig.json" ]; then /root/.bun/bin/bun run build; fi
 
 EXPOSE 8080
 
-CMD ["/root/.bun/bin/bun", "run", "start"]
+CMD ["/root/.bun/bin/bun", "run", "src/index.ts"]

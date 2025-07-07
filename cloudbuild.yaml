@@ -36,6 +36,16 @@ steps:
         "us-central1-docker.pkg.dev/$PROJECT_ID/deepgovbot",
       ]
 
+  # Get the current deployed URL (if any) – optional for updates
+  - id: "Get Service URL"
+    name: "gcr.io/cloud-builders/gcloud"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        SERVICE_URL=$(gcloud run services describe deepgovbot --platform=managed --region=us-central1 --format='value(status.url)' || echo "https://placeholder.url")
+        echo "SERVICE_URL=$SERVICE_URL" >> /workspace/env_vars.txt
+
   # Deploy to Cloud Run with environment variables from Secret Manager
   - name: "gcr.io/cloud-builders/gcloud"
     args:
@@ -50,7 +60,7 @@ steps:
       - "--memory=512Mi"
       - "--cpu=1"
       - "--max-instances=10"
-      - "--set-env-vars=NODE_ENV=production"
+      - "--set-env-vars=NODE_ENV=production,DEPLOYMENT_URL=$SERVICE_URL"
       - "--set-secrets=BOT_TOKEN=bot-token:latest,DATABASE_URL=database-url:latest,WHISPER_API_KEY=whisper-api-key:latest,SELF_BACKEND_ENDPOINT=self-backend-endpoint:latest,OPENAI_API_KEY=openai-api-key:latest,ASSISTANT_ID=assistant-id:latest,HMAC_SECRET_KEY=hmac-secret-key:latest,HASH_SALT=hash-salt:latest"
 
   # Get the actual service URL and update environment variables

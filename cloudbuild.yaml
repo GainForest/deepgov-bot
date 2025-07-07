@@ -36,32 +36,48 @@ steps:
         "us-central1-docker.pkg.dev/$PROJECT_ID/deepgovbot",
       ]
 
-  # Get the current deployed URL (if any) – optional for updates
-  - id: "Get Service URL"
-    name: "gcr.io/cloud-builders/gcloud"
+  # Deploy to Cloud Run and inject the DEPLOYMENT_URL dynamically
+  - name: "gcr.io/cloud-builders/gcloud"
     entrypoint: "bash"
     args:
       - "-c"
       - |
-        SERVICE_URL=$(gcloud run services describe deepgovbot --platform=managed --region=us-central1 --format='value(status.url)' || echo "https://placeholder.url")
-        echo "SERVICE_URL=$SERVICE_URL" >> /workspace/env_vars.txt
+        echo "Fetching deployed service URL..."
+        SERVICE_URL=$(gcloud run services describe deepgovbot \
+          --platform=managed \
+          --region=us-central1 \
+          --format='value(status.url)')
+
+        echo "Deploying with DEPLOYMENT_URL=$SERVICE_URL"
+
+        gcloud run deploy deepgovbot \
+          --image=us-central1-docker.pkg.dev/$PROJECT_ID/deepgovbot/app:$COMMIT_SHA \
+          --platform=managed \
+          --region=us-central1 \
+          --allow-unauthenticated \
+          --port=8080 \
+          --memory=512Mi \
+          --cpu=1 \
+          --max-instances=10 \
+          --set-env-vars="NODE_ENV=production,DEPLOYMENT_URL=$SERVICE_URL" \
+          --set-secrets="BOT_TOKEN=bot-token:latest,DATABASE_URL=database-url:latest,WHISPER_API_KEY=whisper-api-key:latest,SELF_BACKEND_ENDPOINT=self-backend-endpoint:latest,OPENAI_API_KEY=openai-api-key:latest,ASSISTANT_ID=assistant-id:latest,HMAC_SECRET_KEY=hmac-secret-key:latest,HASH_SALT=hash-salt:latest"
 
   # Deploy to Cloud Run with environment variables from Secret Manager
-  - name: "gcr.io/cloud-builders/gcloud"
-    args:
-      - "run"
-      - "deploy"
-      - "deepgovbot"
-      - "--image=us-central1-docker.pkg.dev/$PROJECT_ID/deepgovbot/app:$COMMIT_SHA"
-      - "--platform=managed"
-      - "--region=us-central1"
-      - "--allow-unauthenticated"
-      - "--port=8080"
-      - "--memory=512Mi"
-      - "--cpu=1"
-      - "--max-instances=10"
-      - "--set-env-vars=NODE_ENV=production,DEPLOYMENT_URL=$SERVICE_URL"
-      - "--set-secrets=BOT_TOKEN=bot-token:latest,DATABASE_URL=database-url:latest,WHISPER_API_KEY=whisper-api-key:latest,SELF_BACKEND_ENDPOINT=self-backend-endpoint:latest,OPENAI_API_KEY=openai-api-key:latest,ASSISTANT_ID=assistant-id:latest,HMAC_SECRET_KEY=hmac-secret-key:latest,HASH_SALT=hash-salt:latest"
+  # - name: "gcr.io/cloud-builders/gcloud"
+  #   args:
+  #     - "run"
+  #     - "deploy"
+  #     - "deepgovbot"
+  #     - "--image=us-central1-docker.pkg.dev/$PROJECT_ID/deepgovbot/app:$COMMIT_SHA"
+  #     - "--platform=managed"
+  #     - "--region=us-central1"
+  #     - "--allow-unauthenticated"
+  #     - "--port=8080"
+  #     - "--memory=512Mi"
+  #     - "--cpu=1"
+  #     - "--max-instances=10"
+  #     - "--set-env-vars=NODE_ENV=production,DEPLOYMENT_URL=$SERVICE_URL"
+  #     - "--set-secrets=BOT_TOKEN=bot-token:latest,DATABASE_URL=database-url:latest,WHISPER_API_KEY=whisper-api-key:latest,SELF_BACKEND_ENDPOINT=self-backend-endpoint:latest,OPENAI_API_KEY=openai-api-key:latest,ASSISTANT_ID=assistant-id:latest,HMAC_SECRET_KEY=hmac-secret-key:latest,HASH_SALT=hash-salt:latest"
 
 # Push image to Artifact Registry
 images:

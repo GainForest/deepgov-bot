@@ -53,15 +53,6 @@ steps:
       - "--set-env-vars=NODE_ENV=production"
       - "--set-secrets=BOT_TOKEN=bot-token:latest,DATABASE_URL=database-url:latest,WHISPER_API_KEY=whisper-api-key:latest,SELF_BACKEND_ENDPOINT=self-backend-endpoint:latest,OPENAI_API_KEY=openai-api-key:latest,ASSISTANT_ID=assistant-id:latest,HMAC_SECRET_KEY=hmac-secret-key:latest,HASH_SALT=hash-salt:latest"
 
-  # Get the service URL and update DEPLOYMENT_URL
-  - name: "gcr.io/cloud-builders/gcloud"
-    entrypoint: "bash"
-    args:
-      - "-c"
-      - |
-        SERVICE_URL=$(gcloud run services describe deepgovbot --region=us-central1 --format="value(status.url)")
-        gcloud run services update deepgovbot --region=us-central1 --set-env-vars="NODE_ENV=production,DEPLOYMENT_URL=${SERVICE_URL}"
-
 # Push image to Artifact Registry
 images:
   - "us-central1-docker.pkg.dev/$PROJECT_ID/deepgovbot/app:$COMMIT_SHA"

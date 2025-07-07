@@ -1,12 +1,39 @@
 steps:
+  # Configure Docker authentication
+  - name: "gcr.io/cloud-builders/gcloud"
+    args: ["auth", "configure-docker", "us-central1-docker.pkg.dev"]
+
   # Build Docker image
   - name: "gcr.io/cloud-builders/docker"
     args:
       [
         "build",
         "-t",
-        "us-central1-docker.pkg.dev/$PROJECT_ID/$PROJECT_ID/app:$COMMIT_SHA",
+        "us-central1-docker.pkg.dev/$PROJECT_ID/deepgovbot/app:$COMMIT_SHA",
         ".",
+      ]
+
+  # List built images (debug)
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["images"]
+
+  # Push Docker image to Artifact Registry
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "push",
+        "us-central1-docker.pkg.dev/$PROJECT_ID/deepgovbot/app:$COMMIT_SHA",
+      ]
+
+  # Verify image was pushed (debug)
+  - name: "gcr.io/cloud-builders/gcloud"
+    args:
+      [
+        "artifacts",
+        "docker",
+        "images",
+        "list",
+        "us-central1-docker.pkg.dev/$PROJECT_ID/deepgovbot",
       ]
 
   # Deploy to Cloud Run with environment variables from Secret Manager
@@ -14,8 +41,8 @@ steps:
     args:
       - "run"
       - "deploy"
-      - "$PROJECT_ID"
-      - "--image=us-central1-docker.pkg.dev/$PROJECT_ID/$PROJECT_ID/app:$COMMIT_SHA"
+      - "deepgovbot"
+      - "--image=us-central1-docker.pkg.dev/$PROJECT_ID/deepgovbot/app:$COMMIT_SHA"
       - "--platform=managed"
       - "--region=us-central1"
       - "--allow-unauthenticated"
@@ -28,7 +55,7 @@ steps:
 
 # Push image to Artifact Registry
 images:
-  - "us-central1-docker.pkg.dev/$PROJECT_ID/$PROJECT_ID/app:$COMMIT_SHA"
+  - "us-central1-docker.pkg.dev/$PROJECT_ID/deepgovbot/app:$COMMIT_SHA"
 
 # Build configuration
 options:

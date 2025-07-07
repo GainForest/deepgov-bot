@@ -88,7 +88,7 @@ parse_env_content() {
             
             # Ask if this should be a secret or regular env var
             while true; do
-                read -p "Is '$key' a secret/sensitive value? (y/n): " is_secret
+                read -p "Is '$key' a secret/sensitive value? (y/n): " is_secret </dev/tty
                 case $is_secret in
                     [Yy]* )
                         # Convert to lowercase with hyphens for Secret Manager

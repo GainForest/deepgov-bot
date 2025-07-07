@@ -23,7 +23,7 @@ steps:
       - "--memory=512Mi"
       - "--cpu=1"
       - "--max-instances=10"
-      - "--set-env-vars=NODE_ENV=production,PORT=3000"
+      - "--set-env-vars=NODE_ENV=production"
       - "--set-secrets=BOT_TOKEN=bot-token:latest,DATABASE_URL=database-url:latest,WHISPER_API_KEY=whisper-api-key:latest,SELF_BACKEND_ENDPOINT=self-backend-endpoint:latest,OPENAI_API_KEY=openai-api-key:latest,ASSISTANT_ID=assistant-id:latest,HMAC_SECRET_KEY=hmac-secret-key:latest,HASH_SALT=hash-salt:latest"
 
 # Push image to Artifact Registry

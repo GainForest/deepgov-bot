@@ -19,7 +19,7 @@ const BOT_TOKEN = process.env.BOT_TOKEN!;
 const PORT = parseInt(process.env.PORT || "8080", 10);
 const DEPLOYMENT_URL =
   process.env.DEPLOYMENT_URL ||
-  `https://${process.env.GOOGLE_CLOUD_PROJECT}.uc.r.appspot.com`;
+  `https://${process.env.K_SERVICE}-${process.env.GOOGLE_CLOUD_PROJECT}.${process.env.K_CONFIGURATION}.run.app`;
 const WEBHOOK_PATH = `/webhook/telegram/${BOT_TOKEN}`;
 
 // Define session interface

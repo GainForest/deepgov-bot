@@ -12,41 +12,16 @@ import {
   WS_DB_RELAYER,
 } from "./self";
 import { createSelfApp } from "./self/config";
-import axios from "axios";
+import { getCloudRunUrl } from "./gcp";
 
 dotenv.config();
 
 const BOT_TOKEN = process.env.BOT_TOKEN!;
 const PORT = parseInt(process.env.PORT || "8080", 10);
 let DEPLOYMENT_URL = process.env.DEPLOYMENT_URL;
+
 if (!DEPLOYMENT_URL) {
   // Function to get Cloud Run URL dynamically
-  async function getCloudRunUrl(): Promise<string | undefined> {
-    try {
-      const serviceName = process.env.K_SERVICE;
-
-      if (!serviceName) {
-        console.log("⚠️  K_SERVICE not found, not running on Cloud Run");
-        return undefined;
-      }
-
-      const regionUrl =
-        "http://metadata.google.internal/computeMetadata/v1/instance/region";
-      const headers = { "Metadata-Flavor": "Google" };
-
-      const regionResponse = await axios.get(regionUrl, { headers });
-      const region = regionResponse.data.split("/").pop();
-
-      // Construct the Cloud Run URL
-      const serviceUrl = `https://${serviceName}-${region}.run.app`;
-
-      console.log(`🌐 Detected Cloud Run service URL: ${serviceUrl}`);
-      return serviceUrl;
-    } catch (error) {
-      console.error("❌ Error getting Cloud Run URL:", error);
-      return undefined;
-    }
-  }
   DEPLOYMENT_URL = await getCloudRunUrl();
 }
 

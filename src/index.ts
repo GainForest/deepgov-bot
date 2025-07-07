@@ -17,9 +17,7 @@ dotenv.config();
 
 const BOT_TOKEN = process.env.BOT_TOKEN!;
 const PORT = parseInt(process.env.PORT || "8080", 10);
-const DEPLOYMENT_URL =
-  process.env.DEPLOYMENT_URL ||
-  `https://${process.env.K_SERVICE}-${process.env.GOOGLE_CLOUD_PROJECT}.${process.env.K_CONFIGURATION}.run.app`;
+const DEPLOYMENT_URL = process.env.DEPLOYMENT_URL;
 const WEBHOOK_PATH = `/webhook/telegram/${BOT_TOKEN}`;
 
 // Define session interface
@@ -303,27 +301,4 @@ app.listen(PORT, async () => {
     console.error("❌ Bot setup failed:", error);
     process.exit(1);
   }
-});
-
-// Graceful shutdown
-process.once("SIGINT", async () => {
-  console.info("SIGINT received, shutting down gracefully");
-  try {
-    await bot.telegram.deleteWebhook();
-    console.log("✅ Webhook deleted");
-  } catch (error) {
-    console.error("Error deleting webhook:", error);
-  }
-  process.exit(0);
-});
-
-process.once("SIGTERM", async () => {
-  console.info("SIGTERM received, shutting down gracefully");
-  try {
-    await bot.telegram.deleteWebhook();
-    console.log("✅ Webhook deleted");
-  } catch (error) {
-    console.error("Error deleting webhook:", error);
-  }
-  process.exit(0);
 });

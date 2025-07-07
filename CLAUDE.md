@@ -16,21 +16,19 @@ This is a Telegram bot for "Takin AI" - a conversational AI system for Bhutan's 
 ### Core Components
 
 - **Telegram Bot** (`src/index.ts`): Main bot logic using Telegraf framework
+
   - Handles text and voice messages
   - Built-in rate limiting (100 requests/hour per user)
   - Session management for user state
   - Commands: `/auth`, `/profile`, `/claim`
 
-- **NDI Integration** (`src/ndi.ts`): Bhutan National Digital Identity wallet integration
-  - Authentication via proof requests
-  - Credential issuance for active users (15+ interactions required)
-  - Webhook handling for NDI callbacks
-
 - **AI Processing** (`src/openai.ts`): Message processing through OpenAI
+
   - Text message handling
   - Voice transcription integration
 
 - **Database Layer** (`src/db/`):
+
   - **Schema** (`schema.ts`): Drizzle ORM schemas for `proofs` and `responses` tables
   - **Client** (`client.ts`): Neon PostgreSQL connection
   - **API** (`api.ts`): Database operations for profiles and responses
@@ -42,7 +40,7 @@ This is a Telegram bot for "Takin AI" - a conversational AI system for Bhutan's 
 ### Key Integrations
 
 - **PostgreSQL**: Using Neon serverless with Drizzle ORM
-- **OpenAI**: For message processing and AI responses  
+- **OpenAI**: For message processing and AI responses
 - **Whisper API**: For voice message transcription (RunPod hosted)
 - **NDI Wallet**: Bhutan's digital identity system for authentication and credentials
 - **Telegram**: Bot API for messaging interface
@@ -50,12 +48,13 @@ This is a Telegram bot for "Takin AI" - a conversational AI system for Bhutan's 
 ### Environment Configuration
 
 Required environment variables (see `.env.example`):
+
 - `BOT_TOKEN`: Telegram bot token
 - `DATABASE_URL`: PostgreSQL connection string
 - `NDI_CLIENT_ID`, `NDI_CLIENT_SECRET`: NDI integration credentials
 - `OPENAI_API_KEY`: OpenAI API access
 - `WHISPER_API_KEY`: RunPod Whisper API key
-- `WEBHOOK_URL`, `LINK_URL`: Webhook and frontend URLs
+- `DEPLOYMENT_URL`, `LINK_URL`: Webhook and frontend URLs
 - `HMAC_SECRET_KEY`, `HASH_SALT`: Security keys for data integrity
 
 ### Data Flow

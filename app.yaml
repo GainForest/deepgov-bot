@@ -1,0 +1,52 @@
+runtime: nodejs20
+
+# Automatic scaling configuration
+automatic_scaling:
+  min_instances: 1
+  max_instances: 10
+  target_cpu_utilization: 0.6
+
+# Environment variables
+env_variables:
+  NODE_ENV: production
+  # DEPLOYMENT_URL will be set during deployment
+  # Other environment variables that should be set during deployment
+  # BOT_TOKEN
+  # DEPLOYMENT_URL
+  # PORT
+  # DATABASE_URL
+  # WHISPER_API_KEY
+  # SELF_BACKEND_ENDPOINT
+  # OPENAI_API_KEY
+  # ASSISTANT_ID
+  # HMAC_SECRET_KEY
+  # HASH_SALT
+
+# Resource allocation
+resources:
+  cpu: 1
+  memory_gb: 0.5
+  disk_size_gb: 10
+
+# Health check configuration
+readiness_check:
+  path: "/"
+  check_interval_sec: 5
+  timeout_sec: 4
+  failure_threshold: 2
+  success_threshold: 2
+  app_start_timeout_sec: 300
+
+liveness_check:
+  path: "/"
+  check_interval_sec: 30
+  timeout_sec: 4
+  failure_threshold: 2
+  success_threshold: 2
+
+# Network configuration
+network:
+  session_affinity: true
+# Secret Manager configuration (will be added if secrets are used)
+# includes:
+#   - secret_env_variables.yaml

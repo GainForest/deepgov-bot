@@ -2,13 +2,9 @@ import { Telegraf, Context, session } from "telegraf";
 import { message } from "telegraf/filters";
 import express from "express";
 import dotenv from "dotenv";
-import { v4 as uuidv4 } from "uuid";
 import QRCode from "qrcode";
-import { ensureWebhook, issueCredential } from "./ndi";
-import { handleWebhook } from "./webhook";
 import { handleMessage } from "./openai";
 import { transcribeAudio } from "./transcription";
-import { findProfile, findResponses } from "./db/api";
 import {
   initWebSocket,
   REDIRECT_URL,
@@ -20,8 +16,9 @@ import { createSelfApp } from "./self/config";
 dotenv.config();
 
 const BOT_TOKEN = process.env.BOT_TOKEN!;
-const LINK_URL = process.env.LINK_URL!;
-const PORT = parseInt(process.env.PORT || "3000", 10);
+const PORT = parseInt(process.env.PORT || "8080", 10);
+const DEPLOYMENT_URL = process.env.DEPLOYMENT_URL;
+const WEBHOOK_PATH = `/webhook/telegram/${BOT_TOKEN}`;
 
 // Define session interface
 interface SessionData {
@@ -50,6 +47,26 @@ bot.use(async (ctx, next) => {
   await next();
 });
 
+function checkRateLimit(ctx: MyContext): boolean {
+  const now = Date.now();
+  const windowMs = 3600000; // 1 hour
+  const maxRequests = 100;
+  const cutoff = now - windowMs;
+
+  // Clean old timestamps
+  ctx.session.requestTimestamps = ctx.session.requestTimestamps.filter(
+    (timestamp) => timestamp > cutoff
+  );
+
+  if (ctx.session.requestTimestamps.length >= maxRequests) {
+    ctx.reply("Rate limit exceeded. Please try again later.");
+    return false;
+  }
+
+  ctx.session.requestTimestamps.push(now);
+  return true;
+}
+
 async function handleAuth(ctx: MyContext) {
   if (!checkRateLimit(ctx)) return;
 
@@ -64,8 +81,6 @@ async function handleAuth(ctx: MyContext) {
 
     // Generate a new session ID
     const selfApp = createSelfApp(userId.toString());
-
-    // Create a SelfApp configuration for the WebSocket
 
     // Set up WebSocket connection
     const cleanup = initWebSocket(
@@ -100,7 +115,7 @@ async function handleAuth(ctx: MyContext) {
         // On success
         cleanup();
       },
-      (error) => {}
+      () => {}
     );
 
     // Store cleanup function in session
@@ -144,7 +159,8 @@ async function handleAuth(ctx: MyContext) {
 }
 
 bot.start(async (ctx: MyContext) => {
-  await ctx.reply(`Welcome to GainForest — your thoughtful companion in envisioning GainForest's future.
+  await ctx.reply(
+    `Welcome to GainForest — your thoughtful companion in envisioning GainForest's future.
 Together, let us explore how emerging technologies like AI, Blockchain or any other tech that you think of can uplift wellbeing while honoring the wisdom of traditions. Your hopes, feedbacks, bug reports, questions, and ideas will help shape a better future for GainForest.
 
 ✨ Speak your truth — through text or voice (under 1 minute) 
@@ -154,75 +170,17 @@ Together, let us explore how emerging technologies like AI, Blockchain or any ot
 You're warmly encouraged to guide the conversation — shift topics, share new thoughts, or return to earlier dreams at any time. This space is yours to imagine freely.
 
 Your vision matters deeply.
-`);
+`
+  );
   await handleAuth(ctx);
 });
 
 bot.command("auth", handleAuth);
 
-bot.command("claim", async (ctx: MyContext) => {
-  try {
-    if (!checkRateLimit(ctx)) return;
-
-    const chatId = String(ctx.chat?.id);
-    const userId = String(ctx.from?.id);
-    await ctx.replyWithChatAction("typing");
-    const responses = await findResponses(userId);
-    console.log(responses);
-
-    const requiredInteractions = 15;
-    if (responses.length < requiredInteractions) {
-      return ctx.reply(
-        `${responses.length}/${requiredInteractions} interactions found. Please interact more with GainForest before claiming.`
-      );
-    }
-    await ctx.reply(`${responses.length} interactions with GainForest!`);
-
-    await ctx.reply("Claiming credential...");
-    await ensureWebhook();
-    const link = await issueCredential(chatId, userId);
-
-    const url = `${LINK_URL}?link=${encodeURIComponent(link)} 
-    `;
-    console.log(url);
-    return ctx.reply("🔒 Claim via Self.xyz:", {
-      reply_markup: {
-        inline_keyboard: [[{ text: "Claim", url }]],
-      },
-    });
-
-    // return ctx.reply("Claimed credential! Check your Bhutan NDI Wallet.");
-  } catch (error) {
-    console.error("Claim command error:", error);
-    await ctx.reply("Failed to claim credential. Please try again.");
-  }
-});
-
 bot.command("profile", async (ctx: MyContext) => {
   if (!checkRateLimit(ctx)) return;
-
-  try {
-    await ctx.replyWithChatAction("typing");
-    const userId = ctx.from!.id;
-    const profile = await findProfile(String(userId));
-    if (!profile)
-      return ctx.reply("No profile found. Please authenticate first.");
-    await ctx.replyWithMarkdownV2(
-      `*👤 User Profile*
-
-*Gender:* ${profile.gender}
-*Date of Birth:* ${new Date(profile.dob).toLocaleDateString()}
-*Citizenship:* ${profile.citizenship}
-*Address:*
-• Village: ${profile.address1}
-• Gewog: ${profile.address2}
-• Dzongkhag: ${profile.address3}
-    `
-    );
-  } catch (error) {
-    console.error("Profile command error:", error);
-    await ctx.reply("Fetching profile failed. Please try again.");
-  }
+  ctx.replyWithChatAction("typing");
+  ctx.reply("Profile command coming soon!");
 });
 
 bot.on(message("text"), async (ctx: MyContext) => {
@@ -279,64 +237,91 @@ bot.on(message("voice"), async (ctx: MyContext) => {
   }
 });
 
+// Express app setup
 const app = express();
 app.use(express.json());
 
-app.post("/webhook", handleWebhook);
-app.listen(PORT, () =>
-  console.log(`✅ Webhook server listening on port ${PORT}`)
-);
-
-function checkRateLimit(ctx: MyContext): boolean {
-  const now = Date.now();
-  const windowMs = 3600000; // 1 hour
-  const maxRequests = 100;
-  const cutoff = now - windowMs;
-
-  // Clean old timestamps
-  ctx.session.requestTimestamps = ctx.session.requestTimestamps.filter(
-    (timestamp) => timestamp > cutoff
-  );
-
-  if (ctx.session.requestTimestamps.length >= maxRequests) {
-    ctx.reply("Rate limit exceeded. Please try again later.");
-    return false;
-  }
-
-  ctx.session.requestTimestamps.push(now);
-  return true;
-}
-
-// (async () => {
-// const WEBHOOK_PATH = `/telegraf/${bot.secretPathComponent()}`;
-// const BASE_URL = process.env.BASE_URL; // e.g. "https://mydomain.com"
-
-// await bot.telegram.deleteWebhook();
-// })();
-
-await bot.telegram.setMyCommands([
-  {
-    command: "/auth",
-    description: "Authenticate with Self.xyz",
-  },
-  {
-    command: "/profile",
-    description: "View your profile",
-  },
-  {
-    command: "/claim",
-    description: "Claim your credential",
-  },
-]);
-
-await bot.launch();
-
-process.once("SIGINT", () => {
-  console.info("SIGINT received");
-  bot.stop("SIGINT");
+// Health check endpoint for App Engine
+app.get("/", (req, res) => {
+  res.send("Telegram Bot is running!");
 });
 
-process.once("SIGTERM", () => {
-  console.info("SIGTERM received");
-  bot.stop("SIGTERM");
+// Telegram webhook endpoint
+app.post(WEBHOOK_PATH, (req, res) => {
+  try {
+    bot.handleUpdate(req.body);
+    res.sendStatus(200);
+  } catch (error) {
+    console.error("Webhook error:", error);
+    res.sendStatus(500);
+  }
+});
+
+// Setup webhook and start server
+async function setupBot() {
+  try {
+    // Set bot commands
+    await bot.telegram.setMyCommands([
+      {
+        command: "/auth",
+        description: "Authenticate with Self.xyz",
+      },
+      {
+        command: "/profile",
+        description: "View your profile - coming soon",
+      },
+    ]);
+
+    // Delete existing webhook
+    await bot.telegram.deleteWebhook({ drop_pending_updates: true });
+
+    // Set new webhook
+    const webhookUrl = `${DEPLOYMENT_URL}${WEBHOOK_PATH}`;
+    console.log(`Setting webhook to: ${webhookUrl}`);
+
+    await bot.telegram.setWebhook(webhookUrl, {
+      drop_pending_updates: true,
+    });
+
+    console.log("✅ Webhook set successfully");
+  } catch (error) {
+    console.error("❌ Error setting up webhook:", error);
+    throw error;
+  }
+}
+
+// Start the server
+app.listen(PORT, async () => {
+  console.log(`✅ Server listening on port ${PORT}`);
+
+  try {
+    await setupBot();
+    console.log("✅ Bot setup completed");
+  } catch (error) {
+    console.error("❌ Bot setup failed:", error);
+    process.exit(1);
+  }
+});
+
+// Graceful shutdown
+process.once("SIGINT", async () => {
+  console.info("SIGINT received, shutting down gracefully");
+  try {
+    await bot.telegram.deleteWebhook();
+    console.log("✅ Webhook deleted");
+  } catch (error) {
+    console.error("Error deleting webhook:", error);
+  }
+  process.exit(0);
+});
+
+process.once("SIGTERM", async () => {
+  console.info("SIGTERM received, shutting down gracefully");
+  try {
+    await bot.telegram.deleteWebhook();
+    console.log("✅ Webhook deleted");
+  } catch (error) {
+    console.error("Error deleting webhook:", error);
+  }
+  process.exit(0);
 });

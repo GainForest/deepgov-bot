@@ -5,7 +5,7 @@ steps:
       [
         "build",
         "-t",
-        "us-central1-docker.pkg.dev/$PROJECT_ID/telegram-bot/app:$COMMIT_SHA",
+        "us-central1-docker.pkg.dev/$PROJECT_ID/deepgovbot/app:$COMMIT_SHA",
         ".",
       ]
 
@@ -14,8 +14,8 @@ steps:
     args:
       - "run"
       - "deploy"
-      - "telegram-bot"
-      - "--image=us-central1-docker.pkg.dev/$PROJECT_ID/telegram-bot/app:$COMMIT_SHA"
+      - "deepgovbot"
+      - "--image=us-central1-docker.pkg.dev/$PROJECT_ID/deepgovbot/app:$COMMIT_SHA"
       - "--platform=managed"
       - "--region=us-central1"
       - "--allow-unauthenticated"
@@ -28,6 +28,6 @@ steps:
 
 # Push image to Artifact Registry
 images:
-  - "us-central1-docker.pkg.dev/$PROJECT_ID/telegram-bot/app:$COMMIT_SHA"
+  - "us-central1-docker.pkg.dev/$PROJECT_ID/deepgovbot/app:$COMMIT_SHA"
 
 timeout: "1200s"

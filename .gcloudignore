@@ -1,0 +1,31 @@
+# Include standard gitignore rules
+#!include:.gitignore
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+package-lock.json
+
+# Environment files (NEVER upload these)
+.env*
+!.env.example
+
+# Development files
+.vscode/
+.idea/
+test/
+tests/
+*.test.*
+*.spec.*
+docs/
+README.md
+
+# Generated files
+dist/
+build/
+secret_env_variables.yaml
+
+# OS files
+.DS_Store
+Thumbs.db

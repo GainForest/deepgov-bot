@@ -12,7 +12,6 @@ import {
   WS_DB_RELAYER,
 } from "./self";
 import { createSelfApp } from "./self/config";
-import { getCloudRunUrl } from "./gcp";
 
 dotenv.config();
 

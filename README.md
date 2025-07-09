@@ -1,350 +1,198 @@
-# 🚀 Complete Telegram Bot Deployment Guide
+# GainForest Telegram Bot
 
-_Deploy your Telegram bot to Google Cloud Run with automatic CI/CD_
+A thoughtful AI companion for envisioning GainForest's future, powered by Telegram and Self.xyz authentication.
 
-## 📋 Overview
+## 🌱 Overview
 
-This guide will help you deploy a Node.js Telegram bot to Google Cloud Run with:
+GainForest Bot is an intelligent conversational AI that helps users explore how emerging technologies like AI, Blockchain, and other innovations can uplift wellbeing while honoring traditional wisdom. The bot provides a secure, private space for users to share their hopes, feedback, questions, and ideas about GainForest's future.
 
-- ✅ **Automatic deployments** on every git push
-- ✅ **Secure secret management**
-- ✅ **Auto-scaling** and **99.9% uptime**
-- ✅ **Webhook-based** bot (no polling)
-- ✅ **Cost-optimized** (typically $5-20/month)
+## ✨ Features
 
----
+- **Secure Authentication**: Self.xyz integration for privacy-preserving identity verification
+- **Multi-modal Input**: Support for both text and voice messages (under 1 minute)
+- **AI-Powered Conversations**: Intelligent responses using OpenAI's language models
+- **Voice Transcription**: Automatic speech-to-text conversion for voice messages
+- **Rate Limiting**: Built-in protection against abuse (100 requests per hour)
+- **Real-time Status Updates**: WebSocket-based authentication progress tracking
+- **QR Code Authentication**: Easy mobile authentication via QR codes
 
-## 📌 Prerequisites
+## 🚀 Quick Start
 
-- **Telegram Bot Token** from [@BotFather](https://t.me/BotFather)
-- **GitHub account** with your bot code repository
-- **Google account** for Google Cloud Platform
+### Prerequisites
 
----
+- Node.js 18+ or Bun runtime
+- Telegram Bot Token
+- OpenAI API Key
+- Self.xyz backend endpoint
+- Deployment URL (for webhooks)
 
-## 🎯 Step 1: Google Cloud Account & Billing Setup
+### Installation
 
-### 1.1 Create Google Cloud Account
+1. **Clone the repository**
 
-1. **Go to [Google Cloud Console](https://console.cloud.google.com)**
-2. **Sign in** with your Google account (or create one)
-3. **Accept terms and conditions** when prompted
+   ```bash
+   git clone <repository-url>
+   cd deepgov-bot
+   ```
 
-### 1.2 Enable Billing
+2. **Install dependencies**
 
-1. **Click "Billing"** in the left sidebar
-2. **Click "MANAGE BILLING ACCOUNTS"**
-3. **Click "CREATE ACCOUNT"**
-4. **Add your payment method**
-   - You get **$300 in free credits** for new accounts
-   - Most bots cost under $20/month to run
+   ```bash
+   bun install
+   # or
+   npm install
+   ```
 
-### 1.3 Create New Project
+3. **Configure environment variables**
 
-1. **Click the project dropdown** at the top (says "Select a project")
-2. **Click "NEW PROJECT"**
-3. **Choose your project name** (this will be your **namespace**)
-   - Example: `telegram-weather-bot`, `crypto-trading-bot`, `deepgovbot`
-   - **Important:** Remember this name - we'll use it throughout the guide
-4. **Click "CREATE"**
-5. **Select your new project** from the dropdown
+   ```bash
+   cp .env.example .env
+   ```
 
-**📝 Note:** Your project name will be your **namespace** for the rest of this guide.
+   Add the following to your `.env` file:
 
----
+   ```env
+   BOT_TOKEN=your_telegram_bot_token
+   OPENAI_API_KEY=your_openai_api_key
+   SELF_BACKEND_ENDPOINT=your_self_backend_url
+   DEPLOYMENT_URL=your_deployment_url
+   PORT=8080
+   ```
 
-## ⚙️ Step 2: Enable Required APIs
+4. **Start the bot**
+   ```bash
+   bun start
+   # or
+   npm start
+   ```
 
-1. **Go to APIs & Services > Library** (left sidebar)
-2. **Search and enable these 4 APIs:**
+## 🔐 Authentication Flow
 
-   **API 1: Cloud Build API**
+The bot uses Self.xyz for secure, privacy-preserving authentication:
 
-   - Search "Cloud Build API" → Click → **ENABLE**
+1. **Initiation**: User starts the bot or sends `/auth` command
+2. **QR Code Generation**: Bot creates a QR code linking to Self.xyz authentication
+3. **Mobile Connection**: User scans QR code with Self.xyz mobile app
+4. **Proof Generation**: Self.xyz generates a zero-knowledge proof
+5. **Verification**: Proof is verified on the backend
+6. **Access Granted**: User can now interact with the AI companion
 
-   **API 2: Cloud Run Admin API**
+### Authentication Steps
 
-   - Search "Cloud Run Admin API" → Click → **ENABLE**
+- `DISCONNECTED`: Initial state
+- `WAITING_FOR_MOBILE`: Waiting for mobile device connection
+- `MOBILE_CONNECTED`: Mobile device successfully connected
+- `PROOF_GENERATION_STARTED`: Zero-knowledge proof generation begins
+- `PROOF_GENERATED`: Proof created successfully
+- `PROOF_VERIFIED`: Authentication complete
+- `PROOF_GENERATION_FAILED`: Authentication failed
 
-   **API 3: Secret Manager API**
+## 🏗️ Architecture
 
-   - Search "Secret Manager API" → Click → **ENABLE**
+### Core Components
 
-   **API 4: Artifact Registry API**
+- **Telegram Bot** (`src/index.ts`): Main bot logic with Telegraf
+- **Self.xyz Integration** (`src/self/`): Authentication and WebSocket handling
+- **OpenAI Integration** (`src/openai.ts`): AI conversation handling
+- **Voice Transcription** (`src/transcription.ts`): Speech-to-text conversion
+- **Database Layer** (`src/db/`): Data persistence with Drizzle ORM
 
-   - Search "Artifact Registry API" → Click → **ENABLE**
+### Key Technologies
 
-**✅ Verification:** Go to "APIs & Services > Enabled APIs" to confirm all 4 are listed.
+- **Runtime**: Bun/Node.js with TypeScript
+- **Bot Framework**: Telegraf
+- **Authentication**: Self.xyz with WebSocket communication
+- **AI**: OpenAI GPT models
+- **Database**: Neon PostgreSQL with Drizzle ORM
+- **Voice Processing**: OpenAI Whisper API
+- **QR Codes**: qrcode library
 
----
+## 📱 Usage
 
-## 🏷️ Step 3: Define Your Namespace
+### Commands
 
-For the rest of this guide, we'll use **"namespace"** to refer to your project name.
+- `/start` - Initialize the bot and begin authentication
+- `/auth` - Re-authenticate with Self.xyz
+- `/profile` - View user profile (coming soon)
 
-**Example:** If your project is called `crypto-trading-bot`, then:
+### Message Types
 
-- Namespace = `crypto-trading-bot`
-- Project ID = `crypto-trading-bot`
-- All resources will use this name
+- **Text Messages**: Direct conversation with the AI
+- **Voice Messages**: Automatic transcription and AI response
+- **File Uploads**: Not currently supported
 
-**📝 Write down your namespace:** `________________________`
+## 🔧 Development
 
----
-
-## 👤 Step 4: Create Service Account
-
-### 4.1 Create Service Account
-
-1. **Go to IAM & Admin > Service Accounts** (left sidebar)
-2. **Click "CREATE SERVICE ACCOUNT"**
-3. **Enter details:**
-   - Service account name: `{namespace}` (use your actual namespace)
-   - Service account ID: (auto-filled)
-   - Description: "Service account for {namespace} Telegram bot"
-   - **Click "CREATE AND CONTINUE"**
-4. **Skip role assignment** for now (click "CONTINUE")
-5. **Click "DONE"**
-
-### 4.2 Save Service Account Email
-
-Your service account email will be: `{namespace}@{namespace}.iam.gserviceaccount.com`
-
-**📝 Save this email:** `________________________@________________________.iam.gserviceaccount.com`
-
-**Example:** If namespace = `crypto-trading-bot`, email = `crypto-trading-bot@crypto-trading-bot.iam.gserviceaccount.com`
-
----
-
-## 🔗 Step 5: Create Cloud Build Trigger
-
-### 5.1 Connect GitHub Repository
-
-1. **Go to Cloud Build > Triggers** (left sidebar)
-2. **Click "CONNECT REPOSITORY"**
-3. **Select "GitHub (Cloud Build GitHub App)"**
-4. **Click "CONTINUE"**
-5. **Authorize Google Cloud Build** (follow GitHub prompts)
-6. **Select your bot repository** from the list
-7. **Click "CONNECT"**
-
-### 5.2 Create Build Trigger
-
-1. **Click "CREATE TRIGGER"**
-2. **Configure trigger:**
-   - Name: `{namespace}-deploy`
-   - Event: "Push to a branch"
-   - Source: (your connected repository)
-   - Branch: `^main$`
-   - Configuration: "Cloud Build configuration file"
-   - Location: `cloudbuild.yaml`
-3. **Click "CREATE"**
-
----
-
-## 🔐 Step 6: Add Secrets to Secret Manager
-
-### 6.1 Find Required Secrets
-
-1. **Open your `cloudbuild.yaml` file**
-2. **Search for the line containing `--set-secrets=`**
-3. **Extract the secret IDs** from this line
-
-**Example:** If your line looks like:
-
-```
---set-secrets=BOT_TOKEN=bot-token:latest,OPENAI_API_KEY=openai-api-key:latest,DATABASE_URL=database-url:latest
-```
-
-You need to create these secret IDs: `bot-token`, `openai-api-key`, `database-url`
-
-### 6.2 Create Each Secret
-
-1. **Go to Security > Secret Manager** (left sidebar)
-2. **For each secret ID found above:**
-   - **Click "CREATE SECRET"**
-   - Secret ID: `{secret-id}` (the lowercase part after `=`)
-   - Secret value: Your actual secret value
-   - **Click "CREATE SECRET"**
-
-**Example using the line above:**
-
-- Secret ID: `bot-token` → Secret value: `{your-bot-token-secret}`
-- Secret ID: `openai-api-key` → Secret value: `{your-openai-api-key}`
-- Secret ID: `database-url` → Secret value: `{your-database-url}`
-
-**📝 Note:** If your bot needs additional secrets, add them to both Secret Manager and the `--set-secrets=` line in cloudbuild.yaml.
-
----
-
-## 📦 Step 7: Create Artifact Registry Repository
-
-1. **Go to Artifact Registry** (left sidebar)
-2. **Click "CREATE REPOSITORY"**
-3. **Configure repository:**
-   - Name: `{namespace}` (use your actual namespace)
-   - Format: `Docker`
-   - Location type: `Region`
-   - Region: `us-central1`
-4. **Click "CREATE"**
-
----
-
-## 🔑 Step 8: Grant Required Permissions
-
-**Open Cloud Shell** (button in top-right corner of Google Cloud Console) and run these commands:
-
-### 8.1 Set Your Variables
+### Development Mode
 
 ```bash
-# Replace with your actual values
-export NAMESPACE="your-namespace-here"
-export PROJECT_ID="your-namespace-here"
-export SERVICE_ACCOUNT_EMAIL="${NAMESPACE}@${PROJECT_ID}.iam.gserviceaccount.com"
-
-# Verify your variables
-echo "Namespace: $NAMESPACE"
-echo "Project ID: $PROJECT_ID"
-echo "Service Account: $SERVICE_ACCOUNT_EMAIL"
+bun run dev
 ```
 
-### 8.2 Grant Secret Manager Access
+This runs the bot in watch mode with automatic restarts on file changes.
+
+### Building
 
 ```bash
-gcloud projects add-iam-policy-binding $PROJECT_ID \
-    --member="serviceAccount:${PROJECT_ID}-compute@developer.gserviceaccount.com" \
-    --role="roles/secretmanager.secretAccessor"
+bun run build
 ```
 
-### 8.3 Grant Cloud Run Service Info Access
+Compiles TypeScript to JavaScript.
 
-```bash
-gcloud projects add-iam-policy-binding $PROJECT_ID \
-    --member="serviceAccount:${PROJECT_ID}-compute@developer.gserviceaccount.com" \
-    --role="roles/run.viewer"
-```
+### Environment Variables
 
-### 8.4 Allow Unauthenticated Access (for webhook endpoint)
+| Variable                | Description                        | Required |
+| ----------------------- | ---------------------------------- | -------- |
+| `BOT_TOKEN`             | Telegram Bot API token             | ✅       |
+| `OPENAI_API_KEY`        | OpenAI API key for AI responses    | ✅       |
+| `SELF_BACKEND_ENDPOINT` | Self.xyz backend URL               | ✅       |
+| `DEPLOYMENT_URL`        | Public deployment URL for webhooks | ✅       |
+| `PORT`                  | Server port (default: 8080)        | ❌       |
 
-```bash
-# This will be applied after first deployment
-# We'll run this command after Step 9
-```
+## 🛡️ Security & Privacy
 
-**📝 Note:** The unauthenticated access will be granted automatically by the deployment process.
+- **Zero-Knowledge Proofs**: Self.xyz ensures user privacy
+- **Rate Limiting**: 100 requests per hour per user
+- **Session Management**: Secure session handling with cleanup
+- **WebSocket Security**: Encrypted WebSocket connections
+- **Data Privacy**: User data is private and code is open-sourced
+
+## 🌐 Deployment
+
+### App Engine (Recommended)
+
+The bot is configured for Google App Engine deployment with webhook support.
+
+### Environment Setup
+
+1. Set all required environment variables
+2. Ensure `DEPLOYMENT_URL` points to your public domain
+3. Configure webhook endpoint: `https://your-domain.com/webhook/telegram/{BOT_TOKEN}`
+
+### Health Check
+
+The bot provides a health check endpoint at `/` for monitoring.
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## 📄 License
+
+This project is open source. See [LICENSE](LICENSE) for details.
+
+## 🆘 Support
+
+For issues and questions:
+
+- Check the [Issues](https://github.com/your-repo/issues) page
+- Review the authentication flow documentation
+- Ensure all environment variables are properly configured
 
 ---
 
-## 🚀 Step 9: Deploy Your Bot
-
-### 9.1 Commit and Push
-
-```bash
-# Add any changes you made to your repository
-git add .
-
-# Commit changes
-git commit -m "Configure for Google Cloud Run deployment"
-
-# Push to main branch (triggers automatic deployment)
-git push origin main
-```
-
-### 9.2 Monitor Deployment
-
-1. **Go to Cloud Build > History** in Google Cloud Console
-2. **Watch your build progress** (takes 3-5 minutes)
-3. **Check for any errors** in the build logs
-
-### 9.3 Verify Deployment
-
-```bash
-# Get your bot URL
-gcloud run services describe {namespace} --region=us-central1 --format="value(status.url)"
-
-# Test health endpoint
-curl https://your-bot-url.a.run.app/
-```
-
----
-
-## 🎉 Success! Your Bot is Live
-
-### ✅ What You've Accomplished:
-
-- **🤖 Telegram bot** running 24/7 on Google Cloud Run
-- **🔄 Automatic deployments** on every git push
-- **🔐 Secure secret management** with Google Secret Manager
-- **📈 Auto-scaling** from 0 to 10 instances based on traffic
-- **💰 Cost-optimized** infrastructure
-- **🔗 Automatic webhook** setup and management
-
-### 📊 Monitor Your Bot:
-
-```bash
-# View real-time logs
-gcloud run logs tail {namespace} --region=us-central1
-
-# Check service status
-gcloud run services list
-
-# View build history
-# Go to Cloud Build > History in console
-```
-
-### 💡 Next Steps:
-
-- **Test your bot** by sending `/start` on Telegram
-- **Monitor costs** in Google Cloud Console > Billing
-- **Set up alerts** for errors and cost thresholds
-- **Add more features** and push to deploy automatically
-
----
-
-## 🔧 Troubleshooting
-
-### Common Issues:
-
-**Bot not responding:**
-
-```bash
-# Check logs for errors
-gcloud run logs tail {namespace} --region=us-central1
-
-# Verify webhook is set
-curl "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getWebhookInfo"
-```
-
-**Build failures:**
-
-- Check Cloud Build > History for detailed error logs
-- Verify all secrets exist in Secret Manager
-- Ensure Docker and cloudbuild.yaml syntax is correct
-
-**Permission errors:**
-
-- Verify IAM permissions were granted correctly
-- Check service account has access to secrets
-
----
-
-## 💰 Expected Costs
-
-**Typical monthly costs for a Telegram bot:**
-
-- **Cloud Run**: $2-10 (depends on usage)
-- **Cloud Build**: $1-5 (120 free build minutes/month)
-- **Secret Manager**: $0.60 per secret per month
-- **Artifact Registry**: $0.10/GB storage
-
-**Total**: Usually $5-20/month for most bots
-
----
-
-## 🎯 Summary
-
-**Total setup time:** ~30 minutes  
-**Manual commands:** Only 2 permission commands  
-**Ongoing maintenance:** Zero - fully automated
-
-Your Telegram bot is now running on enterprise-grade infrastructure with automatic scaling, secret management, and CI/CD. Every time you push code, it automatically deploys with zero downtime! 🚀
+**GainForest Bot** - Envisioning a better future through thoughtful AI conversations. 🌱✨

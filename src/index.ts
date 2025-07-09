@@ -21,11 +21,6 @@ const PORT = parseInt(process.env.PORT || "8080", 10);
 let DEPLOYMENT_URL = process.env.DEPLOYMENT_URL;
 
 if (!DEPLOYMENT_URL) {
-  // Function to get Cloud Run URL dynamically
-  DEPLOYMENT_URL = await getCloudRunUrl();
-}
-
-if (!DEPLOYMENT_URL) {
   throw new Error("Couldn't determine the deployment URL");
 }
 

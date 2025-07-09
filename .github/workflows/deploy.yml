@@ -21,21 +21,29 @@ jobs:
       - name: Deploy to GCP
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.GCP_USER }}@${{ secrets.GCP_VM_IP }} << 'EOF'
-            export PATH="$HOME/.bun/bin:$PATH"
-            sudo apt update && sudo apt install -y git curl
+            set -e
+            sudo apt update && sudo apt install -y git curl unzip
+
             if ! command -v bun &> /dev/null; then
               curl -fsSL https://bun.sh/install | bash
               echo 'export PATH="$HOME/.bun/bin:$PATH"' >> ~/.bashrc
+              source ~/.bashrc
             fi
-            source ~/.bashrc
-            if [ ! -d "$HOME/bun-service" ]; then
-              git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git bun-service
+
+            export PATH="$HOME/.bun/bin:$PATH"
+            cd $HOME
+
+            if [ ! -d "bun-service" ]; then
+              git clone git@github.com:gainforest/deepgovbot.git bun-service
             fi
             cd bun-service
             git pull
+
             echo "${{ secrets.ENV_FILE }}" > .env
+
             bun install
-            npm install -g pm2
+            bun add -g pm2
+
             pm2 restart bun-api || pm2 start "bun run start" --name bun-api
             pm2 save
           EOF

@@ -48,7 +48,7 @@ jobs:
             git pull
 
             # Set environment variables from secrets
-            echo "${{ secrets.ENV_FILE }}" > .env
+            echo "${{ secrets.ENV_FILE }}" > .env.local
 
             # Install dependencies and start the bot
             bun install

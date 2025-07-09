@@ -293,7 +293,9 @@ async function setupBot() {
 }
 
 // Start server and keep it running
-app.listen(PORT, async () => {
+app.listen(PORT, () => {
   console.log(`✅ Server listening on port ${PORT}`);
-  await setupBot();
+  setupBot().catch((error) => {
+    console.error("❌ Error setting up bot:", error);
+  });
 });

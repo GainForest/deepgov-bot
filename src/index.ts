@@ -271,22 +271,13 @@ app.post(WEBHOOK_PATH, (req, res) => {
 // Setup webhook and start server
 async function setupBot() {
   try {
-    // Set bot commands
     await bot.telegram.setMyCommands([
-      {
-        command: "/auth",
-        description: "Authenticate with Self.xyz",
-      },
-      {
-        command: "/profile",
-        description: "View your profile - coming soon",
-      },
+      { command: "/auth", description: "Authenticate with Self.xyz" },
+      { command: "/profile", description: "View your profile - coming soon" },
     ]);
 
-    // Delete existing webhook
     await bot.telegram.deleteWebhook({ drop_pending_updates: true });
 
-    // Set new webhook
     const webhookUrl = `${DEPLOYMENT_URL}${WEBHOOK_PATH}`;
     console.log(`Setting webhook to: ${webhookUrl}`);
 
@@ -297,19 +288,12 @@ async function setupBot() {
     console.log("✅ Webhook set successfully");
   } catch (error) {
     console.error("❌ Error setting up webhook:", error);
-    throw error;
+    // Avoid exiting here – let the server stay up
   }
 }
 
-// Start the server
+// Start server and keep it running
 app.listen(PORT, async () => {
   console.log(`✅ Server listening on port ${PORT}`);
-
-  try {
-    await setupBot();
-    console.log("✅ Bot setup completed");
-  } catch (error) {
-    console.error("❌ Bot setup failed:", error);
-    process.exit(1);
-  }
+  await setupBot();
 });

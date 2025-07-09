@@ -22,8 +22,15 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.GCP_USER }}@${{ secrets.GCP_VM_IP }} << 'EOF'
             set -e
+
+            # Install updates and essential tools
             sudo apt update && sudo apt install -y git curl unzip
 
+            # Install Node.js (LTS)
+            curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+            sudo apt install -y nodejs
+
+            # Install Bun if missing
             if ! command -v bun &> /dev/null; then
               curl -fsSL https://bun.sh/install | bash
               echo 'export PATH="$HOME/.bun/bin:$PATH"' >> ~/.bashrc
@@ -33,14 +40,17 @@ jobs:
             export PATH="$HOME/.bun/bin:$PATH"
             cd $HOME
 
-            if [ ! -d "bun-service" ]; then
+            # Clone the repository if it doesn't exist
+            if [ ! -d "deepgov-bot" ]; then
               git clone https://github.com/gainforest/deepgov-bot.git
             fi
             cd deepgov-bot
             git pull
 
+            # Set environment variables from secrets
             echo "${{ secrets.ENV_FILE }}" > .env
 
+            # Install dependencies and start the bot
             bun install
             bun add -g pm2
 

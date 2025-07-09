@@ -34,9 +34,9 @@ jobs:
             cd $HOME
 
             if [ ! -d "bun-service" ]; then
-              git clone git@github.com:gainforest/deepgovbot.git bun-service
+              git clone git@github.com:gainforest/deepgov-bot.git
             fi
-            cd bun-service
+            cd deepgov-bot
             git pull
 
             echo "${{ secrets.ENV_FILE }}" > .env
@@ -44,6 +44,6 @@ jobs:
             bun install
             bun add -g pm2
 
-            pm2 restart bun-api || pm2 start "bun run start" --name bun-api
+            pm2 restart deepgov-bot || pm2 start "bun run start" --name deepgov-bot
             pm2 save
           EOF

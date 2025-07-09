@@ -45,10 +45,10 @@ jobs:
               git clone https://github.com/gainforest/deepgov-bot.git
             fi
             cd deepgov-bot
+            git reset --hard
             git pull
 
             # Set environment variables from secrets
-            echo "${{ secrets.ENV_FILE }}"
             echo "${{ secrets.ENV_FILE }}" > .env.local
 
             # Install dependencies and start the bot

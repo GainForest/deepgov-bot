@@ -6,8 +6,8 @@ export const createSelfApp = (userId: string) => {
   const userIdUuId = getUuid(userId);
 
   const selfApp = new SelfAppBuilder({
-    appName: "GainForest Bot",
-    scope: "gainforest",
+    appName: "DeepGov EtherOwl Bot",
+    scope: "deepgov",
     endpoint: `${process.env.SELF_BACKEND_ENDPOINT}/api/verify`,
     logoBase64: logo, // You can add a base64 logo here if needed
     userId: userIdUuId,
@@ -18,7 +18,7 @@ export const createSelfApp = (userId: string) => {
       excludedCountries: [],
     },
     version: 2,
-    userDefinedData: "I am authenticating to the GainForest Bot",
+    userDefinedData: "I am authenticating to DeepGov EtherOwl",
   }).build();
 
   return selfApp;

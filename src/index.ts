@@ -12,12 +12,18 @@ import {
   WS_DB_RELAYER,
 } from "./self";
 import { createSelfApp } from "./self/config";
+import { getCloudRunUrl } from "./gcp";
 
 dotenv.config();
 
 const BOT_TOKEN = process.env.BOT_TOKEN!;
 const PORT = parseInt(process.env.PORT || "8080", 10);
 let DEPLOYMENT_URL = process.env.DEPLOYMENT_URL;
+
+if (!DEPLOYMENT_URL) {
+  // Function to get Cloud Run URL dynamically
+  DEPLOYMENT_URL = await getCloudRunUrl();
+}
 
 if (!DEPLOYMENT_URL) {
   throw new Error("Couldn't determine the deployment URL");
@@ -108,7 +114,7 @@ async function handleAuth(ctx: MyContext) {
             break;
           case QRcodeSteps.PROOF_VERIFIED:
             ctx.reply(
-              "🎉 Authentication successful! You can now use GainForest bot."
+              "🎉 Authentication successful! You can now use EtherOwl bot."
             );
             break;
           case QRcodeSteps.PROOF_GENERATION_FAILED:
@@ -165,16 +171,17 @@ async function handleAuth(ctx: MyContext) {
 
 bot.start(async (ctx: MyContext) => {
   await ctx.reply(
-    `Welcome to GainForest — your thoughtful companion in envisioning GainForest's future.
-Together, let us explore how emerging technologies like AI, Blockchain or any other tech that you think of can uplift wellbeing while honoring the wisdom of traditions. Your hopes, feedbacks, bug reports, questions, and ideas will help shape a better future for GainForest.
+    `Hey! 🦉 I'm EtherOwl — researching whether funding mechanisms deserve their own Gitcoin round.
 
-✨ Speak your truth — through text or voice (under 1 minute) 
-🔐 Please begin by authenticating with Self.xyz
-🌱 Your data is private and all the code is open-sourced
+I'm here to gather real insights about what's broken in funding and what needs building. No BS, just straight talk about the funding landscape.
 
-You're warmly encouraged to guide the conversation — shift topics, share new thoughts, or return to earlier dreams at any time. This space is yours to imagine freely.
+🔐 Please authenticate with Self.xyz first
+🌱 Your data stays private, code is open-sourced
+💬 Share your honest take — text or voice (under 1 minute)
 
-Your vision matters deeply.
+What's your real experience with current funding systems? Where do they fall short?
+
+Let's cut through the fluff and get to the hard truths. 🦉
 `
   );
   await handleAuth(ctx);

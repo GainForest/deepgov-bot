@@ -12,18 +12,12 @@ import {
   WS_DB_RELAYER,
 } from "./self";
 import { createSelfApp } from "./self/config";
-import { getCloudRunUrl } from "./gcp";
 
 dotenv.config();
 
 const BOT_TOKEN = process.env.BOT_TOKEN!;
 const PORT = parseInt(process.env.PORT || "8080", 10);
 let DEPLOYMENT_URL = process.env.DEPLOYMENT_URL;
-
-if (!DEPLOYMENT_URL) {
-  // Function to get Cloud Run URL dynamically
-  DEPLOYMENT_URL = await getCloudRunUrl();
-}
 
 if (!DEPLOYMENT_URL) {
   throw new Error("Couldn't determine the deployment URL");

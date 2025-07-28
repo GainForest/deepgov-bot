@@ -7,8 +7,8 @@ export const createSelfApp = (userId: string) => {
 
   const selfApp = new SelfAppBuilder({
     appName: "DeepGov EtherOwl Bot",
-    scope: "deepgov",
-    endpoint: `${process.env.SELF_BACKEND_ENDPOINT}/api/verify`,
+    scope: "ether-owl",
+    endpoint: `${process.env.SELF_BACKEND_ENDPOINT}/api/verify/ether-owl`,
     logoBase64: logo, // You can add a base64 logo here if needed
     userId: userIdUuId,
     disclosures: {
